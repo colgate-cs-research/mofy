@@ -96,8 +96,6 @@ public class ASTModifier extends CiscoParserBaseListener{
     public void enterS_interface(S_interfaceContext ctx) {
         output.println("interface "+ctx.iname.getText());
         // output.println(ParseTreePrettyPrinter.print(ctx, config.combinedParser));
-        Cp_ip_access_groupContext newAcl = new Cp_ip_access_groupContext(ctx, ctx.invokingState);
-        newAcl.name =
     }
     @Override
     public void exitIf_description(If_descriptionContext ctx){
