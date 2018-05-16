@@ -15,7 +15,7 @@
         <dependency>
             <groupId>org.batfish</groupId>
             <artifactId>batfish</artifactId>
-            <version>0.33.0</version>
+            <version>0.35.0</version>
             <classifier>jar-with-dependencies</classifier>
         </dependency>
         <dependency>
@@ -26,12 +26,12 @@
         <dependency>
             <groupId>org.batfish</groupId>
             <artifactId>batfish-client</artifactId>
-            <version>0.33.0</version>
+            <version>0.35.0</version>
         </dependency>
         <dependency>
             <groupId>org.batfish</groupId>
             <artifactId>batfish-common-protocol</artifactId>
-            <version>0.33.0</version>
+            <version>0.35.0</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/commons-io/commons-io -->
         <dependency>
