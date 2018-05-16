@@ -157,10 +157,8 @@ public class ASTModifier extends CiscoParserBaseListener{
     @Override
     public void exitIf_vrf(If_vrfContext ctx){
         printTokens(ctx);
-    }   @Override
-    public void exitIf_vrf_forwarding(If_vrf_forwardingContext ctx){
-        printTokens(ctx);
-    }   @Override
+    }
+    @Override
     public void exitIf_vrf_member(If_vrf_memberContext ctx){
         printTokens(ctx);
     }

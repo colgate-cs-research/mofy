@@ -7,6 +7,7 @@ import org.batfish.datamodel.*;
 import org.batfish.main.Batfish;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -35,7 +36,7 @@ public class Mofy{
 
     public void run(){
         try {
-            configPaths = Batfish.listAllFiles(Paths.get(settings.getConfigsDir()));
+            configPaths =listConfigFiles(Paths.get(settings.getConfigsDir()));
         }catch(Exception e){
             e.printStackTrace();
         }
@@ -60,9 +61,9 @@ public class Mofy{
 
     }
 
-
     /*
-     * Populate
+     * Deduce the set of all possible ACLs that may be
+     * added to the network configuration files.
      */
     private void deduceACLModifications(){
         Configuration genericConfiguration;
@@ -71,9 +72,30 @@ public class Mofy{
             Map<String, Interface> interfaceMap = genericConfiguration.getInterfaces();
             for (String interfaceName : interfaceMap.keySet()){
                 Interface iface = interfaceMap.get(interfaceName);
-                System.out.println(iface.getPrefix().getNetworkPrefix());
+                System.out.println(iface.getAddress());
             }
         }
     }
 
+
+    /*
+     * List all config files(ending with .cfg) in a directory.
+     * @param dirPath Path to directory
+     * @return list of config files
+     */
+    private List<Path> listConfigFiles(Path cfgDirPath){
+        File configsDir = cfgDirPath.toFile();
+        File[] cfgFiles = configsDir.listFiles(new FilenameFilter() {
+            @Override
+            public boolean accept(File dir, String name) {
+                return name.endsWith(".cfg");
+            }
+        });
+
+        List<Path> cfgPaths = new ArrayList<>();
+        for (File cfgFile: cfgFiles){
+            cfgPaths.add(cfgFile.toPath());
+        }
+        return cfgPaths;
+    }
 }
