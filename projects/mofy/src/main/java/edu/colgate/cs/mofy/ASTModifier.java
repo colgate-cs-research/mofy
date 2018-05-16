@@ -12,27 +12,57 @@ import org.batfish.grammar.cisco.CiscoParser.*;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ASTModifier extends CiscoParserBaseListener{
 
-    private Config config;
+    private Map<String, Config> hostToConfigMap;
+    private File outputDir;
+
     private PrintStream output;
 
-    public ASTModifier(Config config, File outputFile){
-        this.config = config;
+    private Config currentConfig;
+
+    private static int MOD_ID = 1;
+
+    public ASTModifier(List<Config> configs, File outputDir){
+        hostToConfigMap = new HashMap<>();
+        for (Config config: configs){
+            hostToConfigMap.put(config.getHostname()
+                    ,config);
+        }
+        this.outputDir = outputDir;
+        this.currentConfig = null;
+    }
+
+    public void modify(Mofy.ACLModification modification){
+        String hostname = modification.getHost();
+        if (!hostToConfigMap.containsKey(hostname)){
+            System.out.printf("Host %s : NOT FOUND!", hostname);
+            return;
+        }
+
+        Config config = hostToConfigMap.get(hostname);
+        this.currentConfig = config;
         try {
-            output = new PrintStream(outputFile);
+            File hostDir = new File (outputDir, config.getHostname());
+            if (!hostDir.exists()) hostDir.mkdir();
+            output = new PrintStream(new File(outputDir,
+                    String.format("%s/%s_%d.cfg",
+                            config.getHostname(),
+                            config.getHostname(),
+                            MOD_ID)));
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
-    }
-
-    public void modify(){
         ParseTreeWalker walker = new ParseTreeWalker();
         walker.walk(this,config.getParseTree());
         output.println("end");
         output.close();
+        MOD_ID++;
+
     }
 
     /**
@@ -40,7 +70,7 @@ public class ASTModifier extends CiscoParserBaseListener{
      * @param ctx stanza of tokens to be printed
      */
     public void printTokens(ParserRuleContext ctx) {
-        List<? extends Token> tokenList = this.config.getTokens(
+        List<? extends Token> tokenList = this.currentConfig.getTokens(
             ctx.getStart().getTokenIndex(), ctx.getStop().getTokenIndex());
         output.print(" ");
         for (Token tok : tokenList){

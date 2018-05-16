@@ -26,11 +26,16 @@ public class Mofy{
     private List<Path> configPaths;
     private List<Config> configs;
 
+    private ASTModifier modifier;
+
     private List<ACLModification> aclModifications;
 
     public Mofy(String[] args) {
        settings = new Settings(args);
        configs = new ArrayList<>();
+       if (!settings.getOutputDir().exists()){
+           settings.getOutputDir().mkdir();
+       }
     }
 
     public void run(){
@@ -40,28 +45,30 @@ public class Mofy{
             e.printStackTrace();
         }
 
-        /* Create Configuration Files */
         for (Path cfgFilePath: configPaths){
             if (!cfgFilePath.toString().endsWith("cfg"))
                 continue;
             File file = new File(cfgFilePath.toString());
 
             try {
-                Config config = new Config(file, Logger.getInstance(Logger.Level.DEBUG));
-                configs.add(config);
-
-//                (new ASTModifier(config, settings.getOutputFile())).modify();
+                configs.add(new Config(file, Logger.getInstance(Logger.Level.DEBUG)));
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
 
+        modifier = new ASTModifier(configs, settings.getOutputDir());
         deduceACLModifications();
+
         for (ACLModification mod:aclModifications) {
-            System.out.println(mod);
+            modifier.modify(mod);
+            break;
         }
     }
 
+    /*
+     * Playing around with Lambdas. TODO: Replace this with simple method.
+     */
     interface CreateModification{
         void addACLmod(String host, List<Interface> ifaces, Prefix network);
     }
@@ -106,6 +113,9 @@ public class Mofy{
 
     }
 
+    private void applyACLmodification(ACLModification aclModification){
+
+    }
 
     /*
      * List all config files(ending with .cfg) in a directory.
@@ -154,6 +164,26 @@ public class Mofy{
                 this.outboundFilterNetwork = filterCriteria;
             }
             isInbound = inboundAcl;
+        }
+
+        public String getHost() {
+            return host;
+        }
+
+        public Interface getIface() {
+            return iface;
+        }
+
+        public Prefix getInboundFilterNetwork() {
+            return inboundFilterNetwork;
+        }
+
+        public Prefix getOutboundFilterNetwork() {
+            return outboundFilterNetwork;
+        }
+
+        public boolean isInbound() {
+            return isInbound;
         }
 
         @Override

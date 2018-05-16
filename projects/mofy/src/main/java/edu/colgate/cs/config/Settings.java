@@ -25,7 +25,7 @@ public class Settings {
         return configsDir;
     }
 
-    public File getOutputFile() {
+    public File getOutputDir() {
         return outputFile;
     }
 
