@@ -3,6 +3,7 @@ package edu.colgate.cs.mofy;
 import edu.colgate.cs.config.Settings;
 import edu.wisc.cs.arc.Logger;
 import edu.wisc.cs.arc.configs.Config;
+import org.apache.commons.collections4.list.TreeList;
 import org.batfish.datamodel.*;
 import org.batfish.main.Batfish;
 
@@ -11,10 +12,7 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 
 public class Mofy{
@@ -28,6 +26,7 @@ public class Mofy{
     private List<Path> configPaths;
     private List<Config> configs;
 
+    private List<ACLModification> aclModifications;
 
     public Mofy(String[] args) {
        settings = new Settings(args);
@@ -58,7 +57,13 @@ public class Mofy{
         }
 
         deduceACLModifications();
+        for (ACLModification mod:aclModifications) {
+            System.out.println(mod);
+        }
+    }
 
+    interface CreateModification{
+        void addACLmod(String host, List<Interface> ifaces, Prefix network);
     }
 
     /*
@@ -66,15 +71,39 @@ public class Mofy{
      * added to the network configuration files.
      */
     private void deduceACLModifications(){
+
+        Set<Prefix> prefixes = new TreeSet<>();
+        Map<String,List<Interface>> hostToIfaces = new TreeMap<>();
+
         Configuration genericConfiguration;
         for (Config config: configs){
             genericConfiguration = config.getGenericConfiguration();
             Map<String, Interface> interfaceMap = genericConfiguration.getInterfaces();
+            hostToIfaces.put(config.getHostname(), new TreeList<>());
+
             for (String interfaceName : interfaceMap.keySet()){
                 Interface iface = interfaceMap.get(interfaceName);
-                System.out.println(iface.getAddress());
+                hostToIfaces.get(config.getHostname()).add(iface);
+                prefixes.add(iface.getAddress().getPrefix());
             }
         }
+
+        aclModifications = new TreeList<>();
+
+        CreateModification createACLmods = (h, ifaces, network) -> {
+            for(Interface i : ifaces){
+                if (!network.contains(i.getAddress().getIp())) {
+                    aclModifications.add(new ACLModification(h, i, network, true));
+                }
+            }
+        };
+
+        for (Prefix network: prefixes){
+            for (String host: hostToIfaces.keySet()){
+                createACLmods.addACLmod(host, hostToIfaces.get(host), network);
+            }
+        }
+
     }
 
 
@@ -97,5 +126,42 @@ public class Mofy{
             cfgPaths.add(cfgFile.toPath());
         }
         return cfgPaths;
+    }
+
+
+    /*
+     * Information required to make modification..
+     * ONLY STANDARD ACL (1-99, 1300-1999)
+     */
+    static class ACLModification{
+
+        String host;
+        Interface iface;
+        Prefix inboundFilterNetwork;
+        Prefix outboundFilterNetwork;
+
+        boolean isInbound;
+
+        ACLModification(String hostName,
+                        Interface iface,
+                        Prefix filterCriteria,
+                        boolean inboundAcl){
+            this.host = hostName;
+            this.iface = iface;
+            if (inboundAcl) {
+                this.inboundFilterNetwork = filterCriteria;
+            }else{
+                this.outboundFilterNetwork = filterCriteria;
+            }
+            isInbound = inboundAcl;
+        }
+
+        @Override
+        public String toString() {
+            return String.format("Host: %s | Iface: %s | Filter: %s | Is Inbound? : %b",
+                    host, iface.getName(),
+                    isInbound?inboundFilterNetwork:outboundFilterNetwork,
+                    isInbound);
+        }
     }
 }
