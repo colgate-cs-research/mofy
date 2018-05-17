@@ -7,7 +7,7 @@ import org.batfish.datamodel.Prefix;
  * Information required to add ACLs
  * ONLY STANDARD ACL (1-99, 1300-1999)
  */
-public class ACLModification {
+public class ACLModification extends Modification{
 
     private String host;
     private Interface iface;
