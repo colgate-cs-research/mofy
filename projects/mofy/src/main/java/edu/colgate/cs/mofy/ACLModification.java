@@ -60,6 +60,7 @@ class ACLModification {
      */
     public String getACLEntry(){
         int aclNum = 1; //TODO: Fix this , use an available number.
+        //TODO:  Fix filter network (from 10.0.0.0/24 -> 10.0.0.0 0.255.255.255)
         String permitLine = String.format("access-list %d permit any any", aclNum);
         String accessList = String.format("access-list %d %s %s \n%s",
                 aclNum,

@@ -18,23 +18,17 @@ import java.util.Map;
 public class ACLModifier extends CiscoParserBaseListener{
 
     private Map<String, Config> hostToConfigMap;
-    private File outputDir;
-
-    private PrintStream output;
 
     private TokenStreamRewriter rewriter;
 
     private ACLModification aclModification;
 
-    private static int MOD_ID = 1;
 
-    public ACLModifier(List<Config> configs, File outputDir){
+    public ACLModifier(List<Config> configs){
         hostToConfigMap = new HashMap<>();
         for (Config config: configs){
-            hostToConfigMap.put(config.getHostname()
-                    ,config);
+            hostToConfigMap.put(config.getHostname(),config);
         }
-        this.outputDir = outputDir;
     }
 
     public void modify(ACLModification modification){
@@ -48,29 +42,14 @@ public class ACLModifier extends CiscoParserBaseListener{
         Config config = hostToConfigMap.get(hostname);
 
         ListTokenSource tokenSource = new ListTokenSource(config.getTokens());
-        System.out.println(config.getTokens().size());
         CommonTokenStream commonTokenStream = new CommonTokenStream(tokenSource);
         commonTokenStream.fill();
         rewriter = new TokenStreamRewriter(commonTokenStream);
-        try {
-            File hostDir = new File (outputDir, config.getHostname());
-            if (!hostDir.exists()) hostDir.mkdir();
-            output = new PrintStream(new File(outputDir,
-                    String.format("%s/%s_%d.cfg",
-                            config.getHostname(),
-                            config.getHostname(),
-                            MOD_ID)));
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
         ParseTreeWalker walker = new ParseTreeWalker();
         walker.walk(this,config.getParseTree());
-        output.println("end");
-        output.close();
-        MOD_ID++;
+
+        //Test Printout.
         System.out.println(rewriter.getText());
-
-
     }
 
     @Override
@@ -79,12 +58,4 @@ public class ACLModifier extends CiscoParserBaseListener{
         rewriter.insertAfter(ctx.getStop(), String.format("!\n%s\n", aclModification.getACLEntry()));
     }
 
-    @Override
-    public void enterCisco_configuration(Cisco_configurationContext ctx) {
-        super.enterCisco_configuration(ctx);
-        //Need to create ACL stanza as a child .
-        //Idea  :  Use TokenStreamRewriter
-        System.out.println(ctx.getStart() + " " + ctx.getStop());
-        rewriter.insertAfter(ctx.getStart(), "<Insertion>");
-    }
 }

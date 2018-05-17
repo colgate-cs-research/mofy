@@ -3,6 +3,7 @@ package edu.colgate.cs.mofy;
 import edu.colgate.cs.config.Settings;
 import edu.wisc.cs.arc.Logger;
 import edu.wisc.cs.arc.configs.Config;
+import org.apache.commons.cli.ParseException;
 import org.apache.commons.collections4.list.TreeList;
 import org.batfish.datamodel.*;
 
@@ -30,16 +31,17 @@ public class Mofy{
     private List<ACLModification> aclModifications;
 
     public Mofy(String[] args) {
-       settings = new Settings(args);
-       configs = new ArrayList<>();
-       if (!settings.getOutputDir().exists()){
-           settings.getOutputDir().mkdir();
-       }
+        try {
+            settings = new Settings(args);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        configs = new ArrayList<>();
     }
 
     public void run(){
         try {
-            configPaths =listConfigFiles(Paths.get(settings.getConfigsDir()));
+            configPaths =listConfigFiles(Paths.get(settings.getConfigsDirectory()));
         }catch(Exception e){
             e.printStackTrace();
         }
@@ -56,7 +58,7 @@ public class Mofy{
             }
         }
 
-        modifier = new ACLModifier(configs, settings.getOutputDir());
+        modifier = new ACLModifier(configs);
         deduceACLModifications();
 
         for (ACLModification mod:aclModifications) {
@@ -112,7 +114,6 @@ public class Mofy{
 
     }
 
-
     /*
      * List all config files(ending with .cfg) in a directory.
      * @param dirPath Path to directory
@@ -133,6 +134,4 @@ public class Mofy{
         }
         return cfgPaths;
     }
-
-
 }
