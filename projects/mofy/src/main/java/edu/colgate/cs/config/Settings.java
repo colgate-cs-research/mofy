@@ -1,7 +1,5 @@
 package edu.colgate.cs.config;
 
-import java.io.File;
-
 import edu.colgate.cs.mofy.Mofy;
 import org.apache.commons.cli.*;
 
