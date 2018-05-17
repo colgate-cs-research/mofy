@@ -1,4 +1,4 @@
-package edu.colgate.cs.mofy;
+package edu.colgate.cs.modification;
 
 import org.batfish.datamodel.Interface;
 import org.batfish.datamodel.Prefix;
@@ -7,7 +7,7 @@ import org.batfish.datamodel.Prefix;
  * Information required to add ACLs
  * ONLY STANDARD ACL (1-99, 1300-1999)
  */
-class ACLModification {
+public class ACLModification {
 
     private String host;
     private Interface iface;
@@ -18,7 +18,7 @@ class ACLModification {
 
     private int aclNum;
 
-    ACLModification(String hostName,
+    public ACLModification(String hostName,
                     Interface iface,
                     Prefix filterCriteria,
                     boolean inboundAcl,
@@ -110,6 +110,14 @@ class ACLModification {
         return accessList;
     }
 
+    /**
+     * ACL line in Interface stanza
+     * @return Line for applying acl to designated interface
+     */
+    public String getACLIfaceLine() {
+        return String.format("ip access-group %d %s", aclNum, isInbound?"in":"out");
+    }
+
     @Override
     public String toString() {
         return String.format("Host: %s | Iface: %s | Filter: %s | Is Inbound? : %b",
@@ -118,8 +126,4 @@ class ACLModification {
                 isInbound);
     }
 
-
-    public String getACLIfaceLine() {
-        return String.format("ip access-group %d %s", aclNum, isInbound?"in":"out");
-    }
 }

@@ -1,11 +1,12 @@
-package edu.colgate.cs.mofy;
+package edu.colgate.cs.modification;
 
+import edu.wisc.cs.arc.Logger;
 import edu.wisc.cs.arc.configs.Config;
 
 import org.antlr.v4.runtime.*;
 
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
-import org.batfish.datamodel.Interface;
+import org.apache.commons.io.FileUtils;
 import org.batfish.datamodel.InterfaceAddress;
 import org.batfish.datamodel.Ip;
 import org.batfish.grammar.cisco.CiscoParserBaseListener;
@@ -13,6 +14,7 @@ import org.batfish.grammar.cisco.CiscoParser.*;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.List;
@@ -24,7 +26,11 @@ public class ACLModifier extends CiscoParserBaseListener{
 
     private TokenStreamRewriter rewriter;
 
+    /** Current ACL Modification to be applied */
     private ACLModification aclModification;
+
+    /** How many times has a config been modified with ACLModifier? */
+    private Map<String, Integer> modificationHistoryMap;
 
     /**
      * Creates an ACLModifier for a set of configuration.
@@ -34,6 +40,10 @@ public class ACLModifier extends CiscoParserBaseListener{
         hostToConfigMap = new HashMap<>();
         for (Config config: configs){
             hostToConfigMap.put(config.getHostname(),config);
+        }
+        modificationHistoryMap = new HashMap<String, Integer>();
+        for (Config config: configs){
+            modificationHistoryMap.put(config.getHostname(), 0);
         }
     }
 
@@ -58,8 +68,37 @@ public class ACLModifier extends CiscoParserBaseListener{
         ParseTreeWalker walker = new ParseTreeWalker();
         walker.walk(this,config.getParseTree());
 
+        updateConfigMap(hostname);
         //Test Printout
         System.out.println(rewriter.getText());
+    }
+
+    /**
+     * Generate .cfg files for each host in the network,
+     * with any modifications applied.
+     * @param outputDir Path to directory where modified configs are to be stored.
+     */
+    public void generateModifiedConfigs(String outputDir){
+        try {
+            File output = new File(outputDir);
+            if (!output.exists()) {
+                output.mkdir();
+            }
+            for (String host: hostToConfigMap.keySet()){
+                FileUtils.writeStringToFile(new File(output, String.format("%s.cfg",host)),
+                        hostToConfigMap.get(host).getText());
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Construct a config object containing ACL modifications made.
+     * @return Modified Config Object
+     */
+    public Config getModifiedConfig(String hostname){
+        return hostToConfigMap.get(hostname);
     }
 
     /**
@@ -82,6 +121,19 @@ public class ACLModifier extends CiscoParserBaseListener{
             }
         }
         return false;
+    }
+
+    /**
+     * Updates the hostnameToConfigMap with modified config.
+     * @param hostname Hostname for config to be updated in the map.
+     */
+    private void updateConfigMap(String hostname){
+        Config config = new Config(rewriter.getText(),
+                hostname,
+                Logger.getInstance(Logger.Level.DEBUG));
+        hostToConfigMap.put(hostname, config);
+        modificationHistoryMap.put(hostname,
+                modificationHistoryMap.get(hostname)+1);
     }
 
     @Override

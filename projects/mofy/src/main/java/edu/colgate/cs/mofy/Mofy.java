@@ -1,6 +1,8 @@
 package edu.colgate.cs.mofy;
 
 import edu.colgate.cs.config.Settings;
+import edu.colgate.cs.modification.ACLModification;
+import edu.colgate.cs.modification.ACLModifier;
 import edu.wisc.cs.arc.Logger;
 import edu.wisc.cs.arc.configs.Config;
 import org.apache.commons.cli.ParseException;
@@ -64,6 +66,11 @@ public class Mofy{
         for (ACLModification mod:aclModifications) {
             modifier.modify(mod);
             break;
+        }
+
+        if (settings.getOutputDirectory()!=null){
+            System.out.printf("Generating modified configs in : %s\n", settings.getOutputDirectory());
+            modifier.generateModifiedConfigs(settings.getOutputDirectory());
         }
     }
 
