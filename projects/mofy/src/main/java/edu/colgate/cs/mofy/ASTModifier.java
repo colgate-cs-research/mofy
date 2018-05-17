@@ -37,7 +37,7 @@ public class ASTModifier extends CiscoParserBaseListener{
         this.currentConfig = null;
     }
 
-    public void modify(Mofy.ACLModification modification){
+    public void modify(ACLModification modification){
         String hostname = modification.getHost();
         if (!hostToConfigMap.containsKey(hostname)){
             System.out.printf("Host %s : NOT FOUND!", hostname);
