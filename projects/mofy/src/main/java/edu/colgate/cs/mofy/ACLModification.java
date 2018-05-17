@@ -13,13 +13,14 @@ class ACLModification {
     Interface iface;
     Prefix inboundFilterNetwork;
     Prefix outboundFilterNetwork;
-
     boolean isInbound;
+    boolean isDeny;
 
     ACLModification(String hostName,
                     Interface iface,
                     Prefix filterCriteria,
-                    boolean inboundAcl){
+                    boolean inboundAcl,
+                    boolean isDeny){
         this.host = hostName;
         this.iface = iface;
         if (inboundAcl) {
@@ -28,6 +29,7 @@ class ACLModification {
             this.outboundFilterNetwork = filterCriteria;
         }
         isInbound = inboundAcl;
+        this.isDeny = isDeny;
     }
 
     public String getHost() {
@@ -48,6 +50,23 @@ class ACLModification {
 
     public boolean isInbound() {
         return isInbound;
+    }
+
+
+    /*
+     * Construct a standard ACL Entry from the modification information
+     * eg:- "access-list 1 deny 10.2.0.0 0.0.255.255\n access-list 1 permit any"
+     * @return string representing Standard ACL stanza
+     */
+    public String getACLEntry(){
+        int aclNum = 1; //TODO: Fix this , use an available number.
+        String permitLine = String.format("access-list %d permit any any", aclNum);
+        String accessList = String.format("access-list %d %s %s \n%s",
+                aclNum,
+                isDeny?"deny":"permit",
+                inboundFilterNetwork.toString(),
+                isDeny?permitLine:"");
+        return accessList;
     }
 
     @Override

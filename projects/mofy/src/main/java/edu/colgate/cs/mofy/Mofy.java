@@ -25,7 +25,7 @@ public class Mofy{
     private List<Path> configPaths;
     private List<Config> configs;
 
-    private ASTModifier modifier;
+    private ACLModifier modifier;
 
     private List<ACLModification> aclModifications;
 
@@ -56,7 +56,7 @@ public class Mofy{
             }
         }
 
-        modifier = new ASTModifier(configs, settings.getOutputDir());
+        modifier = new ACLModifier(configs, settings.getOutputDir());
         deduceACLModifications();
 
         for (ACLModification mod:aclModifications) {
@@ -99,7 +99,7 @@ public class Mofy{
         CreateModification createACLmods = (h, ifaces, network) -> {
             for(Interface i : ifaces){
                 if (!network.contains(i.getAddress().getIp())) {
-                    aclModifications.add(new ACLModification(h, i, network, true));
+                    aclModifications.add(new ACLModification(h, i, network, true, true));
                 }
             }
         };
@@ -112,9 +112,6 @@ public class Mofy{
 
     }
 
-    private void applyACLmodification(ACLModification aclModification){
-
-    }
 
     /*
      * List all config files(ending with .cfg) in a directory.
