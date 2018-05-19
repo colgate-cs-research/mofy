@@ -101,6 +101,12 @@ public class ACLModification extends Modification{
      * @return string representing Standard ACL stanza
      */
     public String getACLEntry(){
+
+        //Cisco Standard ACLs have an implicit `deny all` statement at the end
+        //an ACL stanza, so for a deny entry, `permit any any` must be included
+        //at the end to ensure only packets from specified address are dropped.
+        //Consequently, a permit statement does not require a `deny any any`
+        //after the permit line entry.
         String permitLine = String.format("access-list %d permit any any", aclNum);
         String accessList = String.format("access-list %d %s %s \n%s",
                 aclNum,

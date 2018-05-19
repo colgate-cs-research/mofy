@@ -112,13 +112,11 @@ public class ACLModifier extends Modifier<ACLModification>{
 
         @Override
         public void enterS_hostname(S_hostnameContext ctx) {
-            super.enterS_hostname(ctx);
             rewriter.insertAfter(ctx.getStop(), String.format("!\n%s\n", aclModification.getACLEntry()));
         }
 
         @Override
         public void enterS_interface(S_interfaceContext ctx) {
-            super.enterS_interface(ctx);
             if (isMatchingInterface(ctx)){
                 rewriter.insertBefore(ctx.getStop(),String.format("\n%s", aclModification.getACLIfaceLine()));
             }
