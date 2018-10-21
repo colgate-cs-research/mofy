@@ -53,12 +53,14 @@ public class Settings {
 
         Option option = new Option(CONFIGS_DIRECTORY, true,
                 "Directory containing configuration files to be modified");
+        option.setRequired(true);
         option.setArgName("DIR");
         options.addOption(option);
 
         option = new Option(OUTPUT_DIRECTORY, true,
                 "Directory where modified configurations are to be stored");
         option.setArgName("OUTPUT");
+        option.setRequired(true);
         options.addOption(option);
 
         return options;
