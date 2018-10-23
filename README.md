@@ -4,16 +4,16 @@ Mofy is a network configuration tool that performs random, legal modifications o
 ## Prerequisites
 * ANTLR
 * batfish
-* ARC
 * Z3
 
 ## Compilation
 1. Clone and install [batfish](https://github.com/batfish/batfish).
 2. `cd projects/mofy`
-3. Install the ARC JAR into your local maven repository:
-`mvn install:install-file -Dfile=lib/arc.jar -DgroupId=edu.wisc.cs -DartifactId=arc -Dversion=1.0 -Dpackaging=jar`
-4. Compile mofy:
+3. Compile mofy:
 `mvn install`
 
 ## Running
-1. `java -jar mofy-1.0-jar-with-dependencies.jar -configs ../../configs`
+1. `cd projects/mofy/target`
+2. `java -jar mofy-1.0-jar-with-dependencies.jar -configs <CONFIGS DIR> -outputDir <PATH_TO_OUTPUT_DIR>`
+
+OR `java -cp "projects/mofy/target/mofy-1.0-jar-with-dependencies.jar -configs <CONFIGS DIR> -outputDir <PATH_TO_OUTPUT_DIR>"`
