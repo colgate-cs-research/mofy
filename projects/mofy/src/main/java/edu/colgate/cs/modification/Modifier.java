@@ -1,7 +1,5 @@
 package edu.colgate.cs.modification;
 
-import edu.wisc.cs.arc.configs.Config;
-
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;

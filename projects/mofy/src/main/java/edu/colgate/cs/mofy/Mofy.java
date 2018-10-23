@@ -3,8 +3,7 @@ package edu.colgate.cs.mofy;
 import edu.colgate.cs.config.Settings;
 import edu.colgate.cs.modification.ACLModification;
 import edu.colgate.cs.modification.ACLModifier;
-import edu.wisc.cs.arc.Logger;
-import edu.wisc.cs.arc.configs.Config;
+import edu.colgate.cs.modification.Config;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.collections4.list.TreeList;
 import org.batfish.datamodel.*;
@@ -26,7 +25,7 @@ public class Mofy{
 
     private Settings settings;
     private List<Path> configPaths;
-    private List<Config> configs;
+        private List<Config> configs;
 
     private ACLModifier modifier;
 
@@ -54,7 +53,7 @@ public class Mofy{
             File file = new File(cfgFilePath.toString());
 
             try {
-                configs.add(new Config(file, Logger.getInstance(Logger.Level.DEBUG)));
+                configs.add(new Config(file));
             } catch (IOException e) {
                 e.printStackTrace();
             }

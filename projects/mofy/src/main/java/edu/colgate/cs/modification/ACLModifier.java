@@ -1,7 +1,5 @@
 package edu.colgate.cs.modification;
 
-import edu.wisc.cs.arc.Logger;
-import edu.wisc.cs.arc.configs.Config;
 
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
@@ -70,8 +68,7 @@ public class ACLModifier extends Modifier<ACLModification>{
      */
     private void updateConfigMap(String hostname){
         Config config = new Config(rewriter.getText(),
-                hostname,
-                Logger.getInstance(Logger.Level.DEBUG));
+                hostname);
         hostToConfigMap.put(hostname, config);
         modificationHistoryMap.put(hostname,
                 modificationHistoryMap.get(hostname)+1);
