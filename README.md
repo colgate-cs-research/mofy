@@ -19,4 +19,4 @@ Mofy is a network configuration tool that performs random, legal modifications o
 OR `java -cp "projects/mofy/target/mofy-1.0-jar-with-dependencies.jar -configs <CONFIGS DIR> -outputDir <PATH_TO_OUTPUT_DIR>"`
 
 ## New version running
- java -jar mofy-1.0-jar-with-dependencies.jar -configs <CONFIGS DIR> -outputDir <PATH_TO_OUTPUT_DIR> -Modification <TYPE_OF_MODIFICATION> -Percentage <CHANCE> -seed <RANDOMSEED>
+ 'java -jar mofy-1.0-jar-with-dependencies.jar -configs <CONFIGS DIR> -outputDir <PATH_TO_OUTPUT_DIR> -Modification <TYPE_OF_MODIFICATION> -Percentage <CHANCE> -seed <RANDOMSEED>'
