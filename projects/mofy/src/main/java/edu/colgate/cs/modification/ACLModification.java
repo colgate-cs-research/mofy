@@ -15,6 +15,8 @@ public class ACLModification extends Modification{
     private Prefix outboundFilterNetwork;
     private boolean isInbound;
     private boolean isDeny;
+    private int percentage;
+    private long seed;
 
     private int aclNum;
 
@@ -22,9 +24,13 @@ public class ACLModification extends Modification{
                     Interface iface,
                     Prefix filterCriteria,
                     boolean inboundAcl,
-                    boolean isDeny){
+                    boolean isDeny,
+                    int percentage,
+                    long seed){
         this.host = hostName;
         this.iface = iface;
+        this.percentage = percentage;
+        this.seed = seed;
         if (inboundAcl) {
             this.inboundFilterNetwork = filterCriteria;
         }else{
@@ -122,6 +128,14 @@ public class ACLModification extends Modification{
      */
     public String getACLIfaceLine() {
         return String.format("ip access-group %d %s", aclNum, isInbound?"in":"out");
+    }
+
+    public int getPercent(){
+        return percentage;
+    }
+
+    public long getSeed(){
+        return seed;
     }
 
     @Override

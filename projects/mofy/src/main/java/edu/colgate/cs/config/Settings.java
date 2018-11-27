@@ -13,12 +13,25 @@ public class Settings {
 
     private static final String CONFIGS_DIRECTORY = "configs";
     private static final String OUTPUT_DIRECTORY = "outputDir";
+    private static final String Mofychoice = "Modification";
+    private static final String PERCENT = "Percentage";
+    private static final String SEED = "seed";
 
     /** Where are the configuration files stored? */
     private String configsDirectory;
 
     /** Where are the modified configuration files to be stored? */
     private String outputDirectory;
+
+    private boolean Aclmodification = false;
+
+    private boolean Permitmodification = false;
+
+    private int percent;
+
+    private long seed;
+
+    private String modifications;
 
     public Settings(String[] args) throws ParseException{
         Options options = this.getOptions();
@@ -38,6 +51,18 @@ public class Settings {
 
         configsDirectory = line.getOptionValue(CONFIGS_DIRECTORY);
         outputDirectory = line.getOptionValue(OUTPUT_DIRECTORY);
+        modifications = line.getOptionValue(Mofychoice);
+        percent = Integer.parseInt(line.getOptionValue(PERCENT));
+        seed = Integer.parseInt(line.getOptionValue(SEED));
+
+        if (modifications.equals("ACL")){
+          this.Aclmodification = true;
+        }
+        else if (modifications.equals("Permit")){
+          this.Permitmodification = true;
+        }
+
+
     }
 
 
@@ -63,6 +88,21 @@ public class Settings {
         option.setRequired(true);
         options.addOption(option);
 
+        option = new Option(Mofychoice, true,"The modifications to be made");
+        option.setArgName("Choice");
+        option.setRequired(true);
+        options.addOption(option);
+
+        option = new Option(PERCENT, true, "Percent of the modification happens");
+        option.setArgName("PERCENTAGE");
+        option.setRequired(true);
+        options.addOption(option);
+
+        option = new Option(SEED, true, "The seed to generate random number");
+        option.setArgName("SEED");
+        option.setRequired(true);
+        options.addOption(option);
+
         return options;
     }
 
@@ -83,5 +123,19 @@ public class Settings {
         return outputDirectory;
     }
 
+    public boolean getacl(){
+      return Aclmodification;
+    }
 
+    public boolean getpermit(){
+      return Permitmodification;
+    }
+
+    public int getPercent(){
+      return percent;
+    }
+
+    public long getSeed(){
+      return seed;
+    }
 }

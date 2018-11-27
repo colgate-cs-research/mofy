@@ -1,6 +1,6 @@
 package edu.colgate.cs.modification;
 
-
+import edu.colgate.cs.config.Settings;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 
@@ -117,6 +117,11 @@ public class ACLModifier extends Modifier<ACLModification>{
             if (isMatchingInterface(ctx)){
                 rewriter.insertBefore(ctx.getStop(),String.format("\n%s", aclModification.getACLIfaceLine()));
             }
+        }
+        @Override
+        public void exitStandard_access_list_tail(Standard_access_list_tailContext ctx) {
+          System.out.println(ctx.ala.getStart());
+          rewriter.replace(ctx.ala.getStart(),"XXXX");
         }
 
 

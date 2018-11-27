@@ -3,6 +3,8 @@ package edu.colgate.cs.mofy;
 import edu.colgate.cs.config.Settings;
 import edu.colgate.cs.modification.ACLModification;
 import edu.colgate.cs.modification.ACLModifier;
+import edu.colgate.cs.modification.PermitModifier;
+import edu.colgate.cs.modification.PermitModification;
 import edu.colgate.cs.modification.Config;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.collections4.list.TreeList;
@@ -25,11 +27,18 @@ public class Mofy{
 
     private Settings settings;
     private List<Path> configPaths;
-        private List<Config> configs;
+    private List<Config> configs;
+    private int percentage;
+    private long seed;
 
-    private ACLModifier modifier;
+    private ACLModifier aclmodifier;
+
+    private PermitModifier permitmodifier;
 
     private List<ACLModification> aclModifications;
+
+    private List<PermitModification> permitModifications;
+
 
     public Mofy(String[] args) {
         try {
@@ -58,26 +67,44 @@ public class Mofy{
                 e.printStackTrace();
             }
         }
+        this.percentage = settings.getPercent();
+        this.seed = settings.getSeed();
+        if (settings.getacl()){
+          aclmodifier = new ACLModifier(configs);
+          deduceACLModifications();
 
-        modifier = new ACLModifier(configs);
-        deduceACLModifications();
-
-        for (ACLModification mod:aclModifications) {
-            modifier.modify(mod);
-            break;
+          for (ACLModification mod:aclModifications) {
+              aclmodifier.modify(mod);
+              break;
+          }
+          if (settings.getOutputDirectory()!=null){
+              System.out.printf("Generating modified configs in : %s\n", settings.getOutputDirectory());
+              aclmodifier.generateModifiedConfigs(settings.getOutputDirectory());
+          }
         }
 
-        if (settings.getOutputDirectory()!=null){
-            System.out.printf("Generating modified configs in : %s\n", settings.getOutputDirectory());
-            modifier.generateModifiedConfigs(settings.getOutputDirectory());
+        if (settings.getpermit()){
+          permitmodifier = new PermitModifier(configs,settings);
+          deducePermitmodifications();
+          for (PermitModification mod:permitModifications){
+              permitmodifier.modify(mod);
+              break;
+            }
+            if (settings.getOutputDirectory()!=null){
+                System.out.printf("Generating modified configs in : %s\n", settings.getOutputDirectory());
+                permitmodifier.generateModifiedConfigs(settings.getOutputDirectory());
+            }
+          }
         }
-    }
 
     /*
      * Playing around with Lambdas. TODO: Replace this with simple method.
      */
     interface CreateModification{
         void addACLmod(String host, List<Interface> ifaces, Prefix network);
+    }
+    interface CreatePermitModification{
+        void addPermitmod(String host);
     }
 
     /*
@@ -107,7 +134,7 @@ public class Mofy{
         CreateModification createACLmods = (h, ifaces, network) -> {
             for(Interface i : ifaces){
                 if (!network.contains(i.getAddress().getIp())) {
-                    aclModifications.add(new ACLModification(h, i, network, true, true));
+                    aclModifications.add(new ACLModification(h, i, network, true, true, percentage, seed));
                 }
             }
         };
@@ -118,6 +145,34 @@ public class Mofy{
             }
         }
 
+    }
+
+
+    private void deducePermitmodifications(){
+      Set<Prefix> prefixes = new TreeSet<>();
+      Map<String,List<Interface>> hostToIfaces = new TreeMap<>();
+
+      Configuration genericConfiguration;
+      for (Config config: configs){
+          genericConfiguration = config.getGenericConfiguration();
+          Map<String, Interface> interfaceMap = genericConfiguration.getInterfaces();
+          hostToIfaces.put(config.getHostname(), new TreeList<>());
+
+          for (String interfaceName : interfaceMap.keySet()){
+              Interface iface = interfaceMap.get(interfaceName);
+              hostToIfaces.get(config.getHostname()).add(iface);
+              prefixes.add(iface.getAddress().getPrefix());
+          }
+      }
+      permitModifications = new TreeList<>();
+      CreatePermitModification createPermitmods = (h) -> {
+        for (String host : hostToIfaces.keySet()){
+          permitModifications.add(new PermitModification(host, percentage, seed));
+        }
+      };
+      for (String host: hostToIfaces.keySet()){
+          createPermitmods.addPermitmod(host);
+      }
     }
 
     /*
@@ -133,7 +188,6 @@ public class Mofy{
                 return name.endsWith(".cfg");
             }
         });
-
         List<Path> cfgPaths = new ArrayList<>();
         for (File cfgFile: cfgFiles){
             cfgPaths.add(cfgFile.toPath());
