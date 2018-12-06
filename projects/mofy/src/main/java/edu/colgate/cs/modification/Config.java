@@ -43,7 +43,7 @@ public class Config {
 
     private ConfigurationFormat format;
 
-    private BatfishCombinedParser<?,?> combinedParser;
+    private CiscoCombinedParser combinedParser;
 
     private ControlPlaneExtractor extractor;
 
@@ -64,8 +64,8 @@ public class Config {
                     batfishSettings.getLogLevel(),
                     batfishSettings.getTimestamp(), System.out));
 
-            batfishSettings.setDisableUnrecognized(true);            batfishWarnings = new Warnings(false, true, false, true,
-                    false, false, false);
+            batfishSettings.setDisableUnrecognized(true);
+            batfishWarnings = new Warnings(true, true, false);
         }
 
         switch(this.format){
@@ -76,8 +76,7 @@ public class Config {
                         batfishSettings, this.format);
 
                 this.extractor = new CiscoControlPlaneExtractor(this.text,
-                        this.combinedParser, format, batfishWarnings,
-                        batfishSettings.getUnrecognizedAsRedFlag());
+                        this.combinedParser, this.format, batfishWarnings);
                 break;
             default:
                 throw new BatfishException("Invalid configuration");

@@ -27,6 +27,8 @@ public class Settings {
 
     private boolean Permitmodification = false;
 
+    private boolean Subnetmodification = false;
+
     private int percent;
 
     private long seed;
@@ -61,7 +63,9 @@ public class Settings {
         else if (modifications.equals("Permit")){
           this.Permitmodification = true;
         }
-
+        else if (modifications.equals("Subnet")){
+          this.Subnetmodification = true;
+        }
 
     }
 
@@ -129,6 +133,10 @@ public class Settings {
 
     public boolean getpermit(){
       return Permitmodification;
+    }
+
+    public boolean getsubnet(){
+      return Subnetmodification;
     }
 
     public int getPercent(){

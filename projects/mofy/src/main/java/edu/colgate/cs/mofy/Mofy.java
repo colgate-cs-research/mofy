@@ -5,6 +5,8 @@ import edu.colgate.cs.modification.ACLModification;
 import edu.colgate.cs.modification.ACLModifier;
 import edu.colgate.cs.modification.PermitModifier;
 import edu.colgate.cs.modification.PermitModification;
+import edu.colgate.cs.modification.SubnetModifier;
+import edu.colgate.cs.modification.SubnetModification;
 import edu.colgate.cs.modification.Config;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.collections4.list.TreeList;
@@ -35,9 +37,13 @@ public class Mofy{
 
     private PermitModifier permitmodifier;
 
+    private SubnetModifier subnetmodifier;
+
     private List<ACLModification> aclModifications;
 
     private List<PermitModification> permitModifications;
+
+    private List<SubnetModification> subnetModifications;
 
 
     public Mofy(String[] args) {
@@ -95,6 +101,18 @@ public class Mofy{
                 permitmodifier.generateModifiedConfigs(settings.getOutputDirectory());
             }
           }
+          if (settings.getsubnet()){
+            subnetmodifier = new SubnetModifier(configs,settings);
+            deduceSubnetmodifications();
+            for (SubnetModification mod:subnetModifications){
+              subnetmodifier.modify(mod);
+              break;
+            }
+            if (settings.getOutputDirectory()!=null){
+                System.out.printf("Generating modified configs in : %s\n", settings.getOutputDirectory());
+                subnetmodifier.generateModifiedConfigs(settings.getOutputDirectory());
+            }
+          }
         }
 
     /*
@@ -106,6 +124,10 @@ public class Mofy{
     interface CreatePermitModification{
         void addPermitmod(String host);
     }
+    interface CreateSubnetModification{
+        void addSubnetmod(String hose);
+    }
+
 
     /*
      * Deduce the set of all possible ACLs that may be
@@ -133,7 +155,7 @@ public class Mofy{
 
         CreateModification createACLmods = (h, ifaces, network) -> {
             for(Interface i : ifaces){
-                if (!network.contains(i.getAddress().getIp())) {
+                if (!network.containsIp(i.getAddress().getIp())) {
                     aclModifications.add(new ACLModification(h, i, network, true, true, percentage, seed));
                 }
             }
@@ -172,6 +194,33 @@ public class Mofy{
       };
       for (String host: hostToIfaces.keySet()){
           createPermitmods.addPermitmod(host);
+      }
+    }
+
+    private void deduceSubnetmodifications(){
+      Set<Prefix> prefixes = new TreeSet<>();
+      Map<String,List<Interface>> hostToIfaces = new TreeMap<>();
+
+      Configuration genericConfiguration;
+      for (Config config: configs){
+          genericConfiguration = config.getGenericConfiguration();
+          Map<String, Interface> interfaceMap = genericConfiguration.getInterfaces();
+          hostToIfaces.put(config.getHostname(), new TreeList<>());
+
+          for (String interfaceName : interfaceMap.keySet()){
+              Interface iface = interfaceMap.get(interfaceName);
+              hostToIfaces.get(config.getHostname()).add(iface);
+              prefixes.add(iface.getAddress().getPrefix());
+          }
+      }
+      subnetModifications = new TreeList<>();
+      CreateSubnetModification createSubnetmods = (h) -> {
+        for (String host : hostToIfaces.keySet()){
+          subnetModifications.add(new SubnetModification(host, percentage, seed));
+        }
+      };
+      for (String host: hostToIfaces.keySet()){
+          createSubnetmods.addSubnetmod(host);
       }
     }
 

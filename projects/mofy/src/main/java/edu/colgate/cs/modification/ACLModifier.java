@@ -92,19 +92,35 @@ public class ACLModifier extends Modifier<ACLModification>{
          * @return True if this is the interface to be changed.
          */
         private boolean isMatchingInterface(S_interfaceContext ctx){
-            if (ctx.if_ip_address().size()>0){
-                String ipAddressStr = ctx.if_ip_address(0).ip.getText();
-                String subnetMaskStr= ctx.if_ip_address(0).subnet.getText();
-                Ip ipAddress = new Ip(ipAddressStr);
-                Ip netMask = new Ip(subnetMaskStr);
-
-                InterfaceAddress interfaceAddress = new InterfaceAddress(ipAddress, netMask);
-
-                if (interfaceAddress.equals(aclModification.getIface().getAddress())){
-                    return true;
+          for (If_innerContext innerCtx : ctx.if_inner()) {
+                if (innerCtx.if_ip_address() != null) {
+                  If_ip_addressContext ipCtx = innerCtx.if_ip_address();
+                  // INSERT CODE
+                  String ipAddressStr = ipCtx.ip.getText();
+                  String subnetMaskStr= ipCtx.subnet.getText();
+                  Ip ipAddress = new Ip(ipAddressStr);
+                  Ip netMask = new Ip(subnetMaskStr);
+                  InterfaceAddress interfaceAddress = new InterfaceAddress(ipAddress, netMask);
+                  if (interfaceAddress.equals(aclModification.getIface().getAddress())){
+                      return true;
+                  }
+                  break;
                 }
-            }
-            return false;
+              }
+              return false;
+            // if (ctx.if_inner().if_ip_address().size()>0){
+            //     String ipAddressStr = ctx.if_inner().if_ip_address(0).ip.getText();
+            //     String subnetMaskStr= ctx.if_inner().if_ip_address(0).subnet.getText();
+            //     Ip ipAddress = new Ip(ipAddressStr);
+            //     Ip netMask = new Ip(subnetMaskStr);
+            //
+            //     InterfaceAddress interfaceAddress = new InterfaceAddress(ipAddress, netMask);
+            //
+            //     if (interfaceAddress.equals(aclModification.getIface().getAddress())){
+            //         return true;
+            //     }
+            // }
+            // return false;
         }
 
         @Override
@@ -118,13 +134,6 @@ public class ACLModifier extends Modifier<ACLModification>{
                 rewriter.insertBefore(ctx.getStop(),String.format("\n%s", aclModification.getACLIfaceLine()));
             }
         }
-        @Override
-        public void exitStandard_access_list_tail(Standard_access_list_tailContext ctx) {
-          System.out.println(ctx.ala.getStart());
-          rewriter.replace(ctx.ala.getStart(),"XXXX");
-        }
-
-
     }
 
 
