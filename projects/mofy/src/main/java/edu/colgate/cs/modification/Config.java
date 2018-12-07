@@ -9,7 +9,6 @@ import org.batfish.common.RedFlagBatfishException;
 import org.batfish.common.Warnings;
 import org.batfish.datamodel.Configuration;
 import org.batfish.datamodel.ConfigurationFormat;
-import org.batfish.datamodel.answers.ConvertConfigurationAnswerElement;
 import org.batfish.grammar.BatfishCombinedParser;
 import org.batfish.grammar.ControlPlaneExtractor;
 import org.batfish.grammar.VendorConfigurationFormatDetector;
@@ -122,8 +121,6 @@ public class Config {
                 be.printStackTrace();
             }
             this.vendorConfiguration = extractor.getVendorConfiguration();
-            this.vendorConfiguration.setAnswerElement(
-                    new ConvertConfigurationAnswerElement());
             this.vendorConfiguration.setVendor(this.format);
             this.vendorConfiguration.setWarnings(this.batfishWarnings);
         }
