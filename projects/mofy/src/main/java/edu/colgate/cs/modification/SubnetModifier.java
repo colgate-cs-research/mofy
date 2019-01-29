@@ -104,34 +104,77 @@ public class SubnetModifier extends Modifier<SubnetModification>{
             this.rewriter = rewriter;
         }
 
-        private static Ip toIp(TerminalNode t) {
-          return new Ip(t.getText());
+        private void mutateSubnet(Token ip, Token mask) {
+          InterfaceAddress ifaceAddr = new InterfaceAddress(new Ip(ip.getText()),
+              new Ip(mask.getText()));
+          IpWildcard replacement = mutate(new IpWildcard(ifaceAddr.getPrefix()));
+          rewriter.replace(mask.getTokenIndex(),
+              replacement.getWildcard().toString());
         }
 
-        private static Ip toIp(Token t) {
-          return new Ip(t.getText());
+        private void mutate(Token ip, Token mask) {
+          IpWildcard replacement = mutate(new IpWildcard(new Ip(ip.getText()),
+              new Ip(mask.getText())));
+          rewriter.replace(mask.getTokenIndex(),
+              replacement.getWildcard().toString());
         }
 
+        private void mutate(Token prefix) {
+          IpWildcard replacement = mutate(new IpWildcard(prefix.getText()));
+          rewriter.replace(prefix.getTokenIndex(), replacement.toString());
+        }
 
-        private AccessListAddressSpecifier toAccessListAddressSpecifier(Access_list_ip_rangeContext ctx) {
-          if (ctx.ip != null) {
-            if (ctx.wildcard != null) {
-              // IP and mask
-              Ip wildcard = toIp(ctx.wildcard);
-              return new WildcardAddressSpecifier(new IpWildcard(toIp(ctx.ip), wildcard));
-            } else {
-              // Just IP. Same as if 'host' was specified
-              return new WildcardAddressSpecifier(new IpWildcard(toIp(ctx.ip)));
+        private IpWildcard mutate(IpWildcard orig) {
+          Double num = generator.nextDouble()*100;
+          if (num>(100-SubnetModification.getPercent())){
+            int prefixLen = orig.toPrefix().getPrefixLength();
+            if (prefixLen != 32){
+              prefixLen++;
             }
-          } else if (ctx.ANY() != null || ctx.ANY4() != null) {
-            return new WildcardAddressSpecifier(IpWildcard.ANY);
-          } else if (ctx.prefix != null) {
-            System.out.println(ctx.prefix);
-            return new WildcardAddressSpecifier(new IpWildcard(Prefix.parse(ctx.prefix.getText()+1)));
+            else {
+              prefixLen--;
+            }
+            return new IpWildcard(new Prefix(orig.getIp(), prefixLen));
           }
-          String name = ctx.og.getText();
-          int line = ctx.og.getStart().getLine();
-          return new NetworkObjectGroupAddressSpecifier(name);
+          else{
+            return orig;
+          }
+        }
+
+        @Override
+        public void exitAccess_list_ip_range(Access_list_ip_rangeContext ctx) {
+          if (ctx.wildcard != null) {
+            mutate(ctx.ip, ctx.wildcard);
+          } else if (ctx.prefix != null) {
+            mutate(ctx.prefix);
+          }
+        }
+
+        @Override
+        public void exitIf_ip_address(If_ip_addressContext ctx) {
+          if (ctx.subnet != null) {
+            mutateSubnet(ctx.ip, ctx.subnet);
+          } else if (ctx.prefix != null) {
+            mutate(ctx.prefix);
+          }
+        }
+
+        @Override
+        public void exitRo_network(Ro_networkContext ctx) {
+          if (ctx.wildcard != null) {
+            mutate(ctx.ip, ctx.wildcard);
+          } else if (ctx.prefix != null) {
+            mutate(ctx.prefix);
+          }
+        }
+
+        @Override
+        public void exitNetwork_bgp_tail(Network_bgp_tailContext ctx) {
+          if (ctx.mask != null) {
+            mutate(ctx.ip, ctx.mask);
+          } else if (ctx.prefix != null) {
+            mutate(ctx.prefix);
+          }
         }
       }
-    }
+}

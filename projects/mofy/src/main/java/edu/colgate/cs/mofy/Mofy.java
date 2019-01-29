@@ -81,7 +81,7 @@ public class Mofy{
 
           for (ACLModification mod:aclModifications) {
               aclmodifier.modify(mod);
-              break;
+              //break;
           }
           if (settings.getOutputDirectory()!=null){
               System.out.printf("Generating modified configs in : %s\n", settings.getOutputDirectory());
@@ -94,7 +94,7 @@ public class Mofy{
           deducePermitmodifications();
           for (PermitModification mod:permitModifications){
               permitmodifier.modify(mod);
-              break;
+              //break;
             }
             if (settings.getOutputDirectory()!=null){
                 System.out.printf("Generating modified configs in : %s\n", settings.getOutputDirectory());
@@ -106,7 +106,7 @@ public class Mofy{
             deduceSubnetmodifications();
             for (SubnetModification mod:subnetModifications){
               subnetmodifier.modify(mod);
-              break;
+              //break;
             }
             if (settings.getOutputDirectory()!=null){
                 System.out.printf("Generating modified configs in : %s\n", settings.getOutputDirectory());
