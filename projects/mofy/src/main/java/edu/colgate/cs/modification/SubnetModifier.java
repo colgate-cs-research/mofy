@@ -145,8 +145,10 @@ public class SubnetModifier extends Modifier<SubnetModification>{
         public void exitAccess_list_ip_range(Access_list_ip_rangeContext ctx) {
           if (ctx.wildcard != null) {
             mutate(ctx.ip, ctx.wildcard);
+            System.out.println("subnet change at configuration "+SubnetModification.getHost()+" line: "+ctx.getStart().getLine());
           } else if (ctx.prefix != null) {
             mutate(ctx.prefix);
+            System.out.println("subnet change at configuration "+SubnetModification.getHost()+" line: "+ctx.getStart().getLine());
           }
         }
 
@@ -154,8 +156,10 @@ public class SubnetModifier extends Modifier<SubnetModification>{
         public void exitIf_ip_address(If_ip_addressContext ctx) {
           if (ctx.subnet != null) {
             mutateSubnet(ctx.ip, ctx.subnet);
+            System.out.println("subnet change at configuration "+SubnetModification.getHost()+" line: "+ctx.getStart().getLine());
           } else if (ctx.prefix != null) {
             mutate(ctx.prefix);
+            System.out.println("subnet change at configuration "+SubnetModification.getHost()+" line: "+ctx.getStart().getLine());
           }
         }
 
@@ -163,8 +167,10 @@ public class SubnetModifier extends Modifier<SubnetModification>{
         public void exitRo_network(Ro_networkContext ctx) {
           if (ctx.wildcard != null) {
             mutate(ctx.ip, ctx.wildcard);
+            System.out.println("subnet change at configuration "+SubnetModification.getHost()+" line: "+ctx.getStart().getLine());
           } else if (ctx.prefix != null) {
             mutate(ctx.prefix);
+            System.out.println("subnet change at configuration "+SubnetModification.getHost()+" line: "+ctx.getStart().getLine());
           }
         }
 
@@ -172,8 +178,10 @@ public class SubnetModifier extends Modifier<SubnetModification>{
         public void exitNetwork_bgp_tail(Network_bgp_tailContext ctx) {
           if (ctx.mask != null) {
             mutate(ctx.ip, ctx.mask);
+            System.out.println("subnet change at configuration "+SubnetModification.getHost()+" line: "+ctx.getStart().getLine());
           } else if (ctx.prefix != null) {
             mutate(ctx.prefix);
+            System.out.println("subnet change at configuration "+SubnetModification.getHost()+" line: "+ctx.getStart().getLine());
           }
         }
       }

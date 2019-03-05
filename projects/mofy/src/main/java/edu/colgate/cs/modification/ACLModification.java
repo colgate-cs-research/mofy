@@ -113,7 +113,7 @@ public class ACLModification extends Modification{
         //at the end to ensure only packets from specified address are dropped.
         //Consequently, a permit statement does not require a `deny any any`
         //after the permit line entry.
-        String permitLine = String.format("access-list %d permit any any", aclNum);
+        String permitLine = String.format("access-list %d permit any", aclNum);
         String accessList = String.format("access-list %d %s %s \n%s",
                 aclNum,
                 isDeny?"deny":"permit",

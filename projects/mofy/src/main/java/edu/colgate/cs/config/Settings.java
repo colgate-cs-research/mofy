@@ -29,6 +29,8 @@ public class Settings {
 
     private boolean Subnetmodification = false;
 
+    private boolean Swapmodification = false;
+
     private int percent;
 
     private long seed;
@@ -57,6 +59,7 @@ public class Settings {
         percent = Integer.parseInt(line.getOptionValue(PERCENT));
         seed = Integer.parseInt(line.getOptionValue(SEED));
 
+
         if (modifications.equals("ACL")){
           this.Aclmodification = true;
         }
@@ -65,6 +68,9 @@ public class Settings {
         }
         else if (modifications.equals("Subnet")){
           this.Subnetmodification = true;
+        }
+        else if (modifications.equals("Swap")){
+          this.Swapmodification = true;
         }
 
     }
@@ -137,6 +143,10 @@ public class Settings {
 
     public boolean getsubnet(){
       return Subnetmodification;
+    }
+
+    public boolean getswap(){
+      return Swapmodification;
     }
 
     public int getPercent(){
