@@ -20,3 +20,5 @@ OR `java -cp "projects/mofy/target/mofy-1.0-jar-with-dependencies.jar -configs <
 
 ## New version running
 `java -jar mofy-1.0-jar-with-dependencies.jar -configs <CONFIGS DIR> -outputDir <PATH_TO_OUTPUT_DIR> -Modification <TYPE_OF_MODIFICATION> -Percentage <CHANCE> -seed <RANDOMSEED>`
+ Percentage seed are needed.
+ Option of modification: ACL Permit Subnet Swap (Only a of them at a time)
