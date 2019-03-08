@@ -69,8 +69,8 @@ public class Mofy{
         }
 
         for (Path cfgFilePath: configPaths){
-            if (!cfgFilePath.toString().endsWith("cfg"))
-                continue;
+            // if (!cfgFilePath.toString().endsWith("cfg"))
+            //     continue;
             File file = new File(cfgFilePath.toString());
 
             try {
@@ -86,6 +86,7 @@ public class Mofy{
           deduceACLModifications();
           for (ACLModification mod:aclModifications) {
               aclmodifier.modify(mod);
+              break;
           }
           if (settings.getOutputDirectory()!=null){
               System.out.printf("Generating modified configs in : %s\n", settings.getOutputDirectory());
@@ -248,7 +249,7 @@ public class Mofy{
         File[] cfgFiles = configsDir.listFiles(new FilenameFilter() {
             @Override
             public boolean accept(File dir, String name) {
-                return name.endsWith(".cfg");
+                return true;
             }
         });
         List<Path> cfgPaths = new ArrayList<>();
