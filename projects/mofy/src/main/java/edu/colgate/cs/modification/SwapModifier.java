@@ -22,6 +22,7 @@ import org.batfish.representation.cisco.AccessListAddressSpecifier;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.ArrayList;
@@ -101,20 +102,25 @@ public class SwapModifier extends Modifier<SwapModification>{
     }
 
     private void changelist(){
+      HashSet check = new HashSet<Integer>();
       for (int i = 0; i < all_list.size()-1; i++){
-        if (overlap(all_list.get(i),all_list.get(i+1))){
-          Double num = generator.nextDouble()*100;
-          if (num>(100-SwapModification.getPercent())){
-            Standard_access_list_tailContext temp = all_list.get(i);
-            System.out.println("swap change at configuration "+SwapModification.getHost()+" line: "+all_list.get(i).ala.getStart().getLine());
-            System.out.println("swap change at configuration "+SwapModification.getHost()+" line: "+all_list.get(i+1).ala.getStart().getLine());
-            all_list.set(i, all_list.get(i+1));
-            all_list.set(i+1, temp);
+        for (int j = i+1; j < all_list.size(); j++){
+          if (overlap(all_list.get(i),all_list.get(j))&&(!check.contains(all_list.get(i).ala.getStart().getLine()))&&(!check.contains(all_list.get(j).ala.getStart().getLine()))){
+            Double num = generator.nextDouble()*100;
+            if (num>(100-SwapModification.getPercent())){
+              Standard_access_list_tailContext temp = all_list.get(i);
+              System.out.println("swap change at configuration "+SwapModification.getHost()+" line: "+all_list.get(i).ala.getStart().getLine());
+              check.add(all_list.get(i).ala.getStart().getLine());
+              System.out.println("swap change at configuration "+SwapModification.getHost()+" line: "+all_list.get(j).ala.getStart().getLine());
+              check.add(all_list.get(i).ala.getStart().getLine());
+              all_list.set(i, all_list.get(j));
+              all_list.set(j, temp);
+              break;
+            }
           }
-        }
-        i++;
       }
     }
+  }
 
     private boolean overlap(Standard_access_list_tailContext ctx1, Standard_access_list_tailContext ctx2){
       if (ctx1.ipr.prefix != null && ctx2.ipr.prefix !=null){
