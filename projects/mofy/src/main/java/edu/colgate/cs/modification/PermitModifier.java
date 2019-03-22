@@ -103,5 +103,16 @@ public class PermitModifier extends Modifier<PermitModification>{
               rewriter.replace(ctx.ala.getStart(),"permit");}
           }
         }
+        @Override
+        public void exitExtended_access_list_tail(Extended_access_list_tailContext ctx) {
+          Double num = generator.nextDouble()*100;
+          if (num>(100-PermitModification.getPercent())){
+            System.out.println("permit change at configuration"+PermitModification.getHost()+" line: "+ctx.ala.getStart().getLine());
+            if (ctx.ala.getStart().toString().contains("permit")){
+              rewriter.replace(ctx.ala.getStart(),"deny");}
+            else{
+              rewriter.replace(ctx.ala.getStart(),"permit");}
+          }
+        }
       }
     }
