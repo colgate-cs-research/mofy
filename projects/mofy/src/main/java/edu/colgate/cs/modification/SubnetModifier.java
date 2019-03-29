@@ -78,7 +78,7 @@ public class SubnetModifier extends Modifier<SubnetModification>{
 
         updateConfigMap(hostname);
         //Test Printout
-        System.out.println(rewriter.getText());
+        //System.out.println(rewriter.getText());
     }
 
     /**

@@ -66,7 +66,7 @@ public class PermitModifier extends Modifier<PermitModification>{
 
         updateConfigMap(hostname);
         //Test Printout
-        System.out.println(rewriter.getText());
+        //System.out.println(rewriter.getText());
     }
 
     /**
