@@ -105,43 +105,46 @@ public class SubnetModifier extends Modifier<SubnetModification>{
         }
 
         private boolean mutateSubnet(Token ip, Token mask) {
+          //System.out.println("1 " +ip.getText()+" "+ mask.getText());
           InterfaceAddress ifaceAddr = new InterfaceAddress(Ip.parse(ip.getText()),
               Ip.parse(mask.getText()));
-          IpWildcard orig = IpWildcard.create((ifaceAddr.getPrefix()));
           IpWildcard replacement = mutate(IpWildcard.create((ifaceAddr.getPrefix())));
-          rewriter.replace(mask.getTokenIndex(),
-              replacement.getWildcardMaskAsIp().toString());
-          if (orig.equals(replacement)){
-            return false;
+          if (replacement!=null){
+            rewriter.replace(mask.getTokenIndex(),
+                replacement.getWildcardMaskAsIp().toString());
+            return true;
           }
           else{
-            return true;
+            return false;
           }
         }
 
         private boolean mutate(Token ip, Token mask) {
-          IpWildcard orig = IpWildcard.ipWithWildcardMask(Ip.parse(ip.getText()),Ip.parse(mask.getText()));
+          //System.out.println("2 "+ip.getText()+" "+ mask.getText());
+          if (IpWildcard.ipWithWildcardMask(Ip.parse(ip.getText()),Ip.parse(mask.getText())).isPrefix()){
           IpWildcard replacement = mutate(IpWildcard.ipWithWildcardMask(Ip.parse(ip.getText()),Ip.parse(mask.getText())));
-          rewriter.replace(mask.getTokenIndex(),
-              replacement.getWildcardMaskAsIp().toString());
-          if (orig.equals(replacement)){
-              return false;
-            }
+          if (replacement!=null){
+            rewriter.replace(mask.getTokenIndex(),
+                        replacement.getWildcardMaskAsIp().toString());
+            return true;}
           else{
-              return true;
-           }
+            return false;
+          }
         }
+        return false;
+      }
 
         private boolean mutate(Token prefix) {
-          IpWildcard orig = IpWildcard.parse(prefix.getText());
+          //System.out.println("3 "+ prefix.getText());
           IpWildcard replacement = mutate(IpWildcard.parse(prefix.getText()));
-          rewriter.replace(prefix.getTokenIndex(), replacement.toString());
-          if (orig.equals(replacement)){
-              return false;
-            }
+          if (replacement != null){
+            rewriter.replace(prefix.getTokenIndex(), replacement.toString());
+            //System.out.println("mofy: "+replacement.toString());
+            return true;
+          }
           else{
-              return true;
-           }
+            return false;
+          }
          }
 
         private IpWildcard mutate(IpWildcard orig) {
@@ -157,7 +160,7 @@ public class SubnetModifier extends Modifier<SubnetModification>{
             return IpWildcard.create(Prefix.create((orig.getIp()), prefixLen));
           }
           else{
-            return orig;
+            return null;
           }
         }
 
