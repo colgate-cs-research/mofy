@@ -39,7 +39,7 @@ public abstract class Modifier<E extends Modification> {
                 output.mkdir();
             }
             for (String host: hostToConfigMap.keySet()){
-                FileUtils.writeStringToFile(new File(output, String.format("%s.cfg",host)),
+                FileUtils.writeStringToFile(new File(output, String.format("%s",host)),
                         hostToConfigMap.get(host).getText());
             }
         } catch (IOException e) {

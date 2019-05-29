@@ -5,7 +5,6 @@ import org.antlr.v4.runtime.Token;
 import org.apache.commons.io.FileUtils;
 import org.batfish.common.BatfishException;
 import org.batfish.common.BatfishLogger;
-import org.batfish.common.RedFlagBatfishException;
 import org.batfish.common.Warnings;
 import org.batfish.datamodel.Configuration;
 import org.batfish.datamodel.ConfigurationFormat;
@@ -115,9 +114,8 @@ public class Config {
         if (null == this.vendorConfiguration){
             try{
                 extractor.processParseTree(this.getParseTree());
-            }catch (RedFlagBatfishException rfbe){
-                rfbe.printStackTrace();
-            }catch (BatfishException be){
+            }
+            catch (BatfishException be){
                 be.printStackTrace();
             }
             this.vendorConfiguration = extractor.getVendorConfiguration();
@@ -128,10 +126,10 @@ public class Config {
     }
 
     public Configuration getGenericConfiguration(){
-        if (null == this.genericConfiguration){
-            this.genericConfiguration = this.getVendorConfiguration()
-                    .toVendorIndependentConfiguration();
-        }
+        // if (null == this.genericConfiguration){
+        //     this.genericConfiguration = this.getVendorConfiguration()
+        //             .toVendorIndependentConfiguration();
+        // }
         return this.genericConfiguration;
     }
 

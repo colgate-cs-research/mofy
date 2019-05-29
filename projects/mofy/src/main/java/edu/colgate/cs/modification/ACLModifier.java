@@ -98,8 +98,8 @@ public class ACLModifier extends Modifier<ACLModification>{
                   // INSERT CODE
                   String ipAddressStr = ipCtx.ip.getText();
                   String subnetMaskStr= ipCtx.subnet.getText();
-                  Ip ipAddress = new Ip(ipAddressStr);
-                  Ip netMask = new Ip(subnetMaskStr);
+                  Ip ipAddress = Ip.parse(ipAddressStr);
+                  Ip netMask = Ip.parse(subnetMaskStr);
                   InterfaceAddress interfaceAddress = new InterfaceAddress(ipAddress, netMask);
                   if (interfaceAddress.equals(aclModification.getIface().getAddress())){
                       return true;

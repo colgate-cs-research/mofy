@@ -169,8 +169,8 @@ public class SwapModifier extends Modifier<SwapModification>{
       return true;
     }
     if (ipr1.wildcard != null && ipr2.wildcard !=null){
-    IpWildcard card_1 = new IpWildcard(new Ip(ipr1.ip.getText()), new Ip(ipr1.wildcard.getText()));
-    IpWildcard card_2 = new IpWildcard(new Ip(ipr2.ip.getText()), new Ip(ipr2.wildcard.getText()));
+    IpWildcard card_1 = IpWildcard.ipWithWildcardMask(Ip.parse(ipr1.ip.getText()), Ip.parse(ipr1.wildcard.getText()));
+    IpWildcard card_2 = IpWildcard.ipWithWildcardMask(Ip.parse(ipr2.ip.getText()), Ip.parse(ipr2.wildcard.getText()));
     int subnet_1 = card_1.toPrefix().getPrefixLength();
     int subnet_2 = card_2.toPrefix().getPrefixLength();
     int common;
@@ -181,7 +181,7 @@ public class SwapModifier extends Modifier<SwapModification>{
       common = subnet_1;
     }
     for (int i =0; i < common; i++){
-      if (Ip.getBitAtPosition(new Ip(ipr1.ip.getText()), i) != Ip.getBitAtPosition(new Ip(ipr2.ip.getText()), i)){
+      if (Ip.getBitAtPosition(Ip.parse(ipr1.ip.getText()), i) != Ip.getBitAtPosition(Ip.parse(ipr2.ip.getText()), i)){
         return false;
       }
     }
