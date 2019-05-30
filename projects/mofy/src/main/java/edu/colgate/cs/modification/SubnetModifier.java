@@ -104,60 +104,54 @@ public class SubnetModifier extends Modifier<SubnetModification>{
             this.rewriter = rewriter;
         }
 
-        private boolean mutateSubnet(Token ip, Token mask) {
+        private void mutateSubnet(Token ipToken, Token subnetMaskToken) {
           //System.out.println("1 " +ip.getText()+" "+ mask.getText());
-          InterfaceAddress ifaceAddr = new InterfaceAddress(Ip.parse(ip.getText()),
-              Ip.parse(mask.getText()));
-          IpWildcard replacement = mutate(IpWildcard.create((ifaceAddr.getPrefix())));
+          Ip ip = Ip.parse(ipToken.getText());
+          Ip subnetMask = Ip.parse(subnetMaskToken.getText());
+          int subnetBits = Prefix.MAX_PREFIX_LENGTH - Long.numberOfTrailingZeros(subnetMask.asLong());
+          Integer replacement = mutate(subnetBits);
           if (replacement!=null){
-            rewriter.replace(mask.getTokenIndex(),
-                replacement.getWildcardMaskAsIp().toString());
-            return true;
-          }
-          else{
-            return false;
+            rewriter.replace(subnetMaskToken.getTokenIndex(),
+                Ip.numSubnetBitsToSubnetMask(replacement).toString());
+            System.out.println("subnet change (subnet) at configuration "+SubnetModification.getHost()+" line: "+ipToken.getLine());
           }
         }
 
-        private boolean mutate(Token ip, Token mask) {
+        private void mutateWildcard(Token ipToken, Token wildcardMaskToken) {
           //System.out.println("2 "+ip.getText()+" "+ mask.getText());
-          if (IpWildcard.ipWithWildcardMask(Ip.parse(ip.getText()),Ip.parse(mask.getText())).isPrefix()){
-          IpWildcard replacement = mutate(IpWildcard.ipWithWildcardMask(Ip.parse(ip.getText()),Ip.parse(mask.getText())));
+          Ip ip = Ip.parse(ipToken.getText());
+          Ip wildcardMask = Ip.parse(wildcardMaskToken.getText());
+          int wildcardBits = Integer.numberOfLeadingZeros((int)wildcardMask.asLong());
+          Integer replacement = mutate(wildcardBits);
           if (replacement!=null){
-            rewriter.replace(mask.getTokenIndex(),
-                        replacement.getWildcardMaskAsIp().toString());
-            return true;}
-          else{
-            return false;
+            rewriter.replace(wildcardMaskToken.getTokenIndex(),
+                        Ip.create((1L << replacement) - 1).toString());
+            System.out.println("subnet change (wildcard) at configuration "+SubnetModification.getHost()+" line: "+ipToken.getLine());
           }
-        }
-        return false;
       }
 
-        private boolean mutate(Token prefix) {
+        private void mutatePrefix(Token prefixToken) {
           //System.out.println("3 "+ prefix.getText());
-          IpWildcard replacement = mutate(IpWildcard.parse(prefix.getText()));
+          InterfaceAddress prefix = new InterfaceAddress(prefixToken.getText());
+          Ip ip = prefix.getIp();
+          int subnetBits = prefix.getNetworkBits();
+          Integer replacement = mutate(subnetBits);
           if (replacement != null){
-            rewriter.replace(prefix.getTokenIndex(), replacement.toString());
-            //System.out.println("mofy: "+replacement.toString());
-            return true;
-          }
-          else{
-            return false;
+            rewriter.replace(prefixToken.getTokenIndex(), Prefix.create(ip, replacement).toString());
+            System.out.println("subnet change (prefix) at configuration "+SubnetModification.getHost()+" line: "+prefixToken.getLine());
           }
          }
 
-        private IpWildcard mutate(IpWildcard orig) {
+        private Integer mutate(int orig) {
           Double num = generator.nextDouble()*100;
           if (num<SubnetModification.getPercent()){
-            int prefixLen = orig.toPrefix().getPrefixLength();
-            if (prefixLen != 32){
-              prefixLen++;
+            if (orig < 32){
+              orig++;
             }
             else {
-              prefixLen--;
+              orig--;
             }
-            return IpWildcard.create(Prefix.create((orig.getIp()), prefixLen));
+            return orig;
           }
           else{
             return null;
@@ -167,44 +161,36 @@ public class SubnetModifier extends Modifier<SubnetModification>{
         @Override
         public void exitAccess_list_ip_range(Access_list_ip_rangeContext ctx) {
           if (ctx.wildcard != null) {
-            if(mutate(ctx.ip, ctx.wildcard)){
-                System.out.println("subnet change at configuration "+SubnetModification.getHost()+" line: "+ctx.getStart().getLine());}
+              mutateWildcard(ctx.ip, ctx.wildcard);
           } else if (ctx.prefix != null) {
-              if (mutate(ctx.prefix)){
-                System.out.println("subnet change at configuration "+SubnetModification.getHost()+" line: "+ctx.getStart().getLine());}
+              mutatePrefix(ctx.prefix);
           }
         }
 
         @Override
         public void exitIf_ip_address(If_ip_addressContext ctx) {
           if (ctx.subnet != null) {
-            if (mutateSubnet(ctx.ip, ctx.subnet)){
-              System.out.println("subnet change at configuration "+SubnetModification.getHost()+" line: "+ctx.getStart().getLine());}
+            mutateSubnet(ctx.ip, ctx.subnet);
           } else if (ctx.prefix != null) {
-            if (mutate(ctx.prefix)){
-            System.out.println("subnet change at configuration "+SubnetModification.getHost()+" line: "+ctx.getStart().getLine());}
+            mutatePrefix(ctx.prefix);
           }
         }
 
         @Override
         public void exitRo_network(Ro_networkContext ctx) {
           if (ctx.wildcard != null) {
-            if (mutate(ctx.ip, ctx.wildcard)){
-              System.out.println("subnet change at configuration "+SubnetModification.getHost()+" line: "+ctx.getStart().getLine());}
+            mutateWildcard(ctx.ip, ctx.wildcard);
           } else if (ctx.prefix != null) {
-            if (mutate(ctx.prefix)){
-              System.out.println("subnet change at configuration "+SubnetModification.getHost()+" line: "+ctx.getStart().getLine());}
+            mutatePrefix(ctx.prefix);
           }
         }
 
         @Override
         public void exitNetwork_bgp_tail(Network_bgp_tailContext ctx) {
           if (ctx.mask != null) {
-            if (mutate(ctx.ip, ctx.mask)){
-              System.out.println("subnet change at configuration "+SubnetModification.getHost()+" line: "+ctx.getStart().getLine());}
+            mutateSubnet(ctx.ip, ctx.mask);
           } else if (ctx.prefix != null) {
-            if (mutate(ctx.prefix)){
-              System.out.println("subnet change at configuration "+SubnetModification.getHost()+" line: "+ctx.getStart().getLine());}
+            mutatePrefix(ctx.prefix);
           }
         }
       }
