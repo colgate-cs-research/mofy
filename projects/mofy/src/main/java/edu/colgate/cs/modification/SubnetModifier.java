@@ -124,8 +124,9 @@ public class SubnetModifier extends Modifier<SubnetModification>{
           int wildcardBits = Integer.numberOfLeadingZeros((int)wildcardMask.asLong());
           Integer replacement = mutate(wildcardBits);
           if (replacement!=null){
+            System.out.println(wildcardBits+" "+replacement);
             rewriter.replace(wildcardMaskToken.getTokenIndex(),
-                        Ip.create((1L << replacement) - 1).toString());
+                        Ip.create((1L << (Prefix.MAX_PREFIX_LENGTH - replacement)) - 1).toString());
             System.out.println("subnet change (wildcard) at configuration "+SubnetModification.getHost()+" line: "+ipToken.getLine());
           }
       }
@@ -146,10 +147,10 @@ public class SubnetModifier extends Modifier<SubnetModification>{
           Double num = generator.nextDouble()*100;
           if (num<SubnetModification.getPercent()){
             if (orig < 32){
-              orig++;
+              orig ++;
             }
             else {
-              orig--;
+              orig --;
             }
             return orig;
           }
