@@ -124,7 +124,6 @@ public class SubnetModifier extends Modifier<SubnetModification>{
           int wildcardBits = Integer.numberOfLeadingZeros((int)wildcardMask.asLong());
           Integer replacement = mutate(wildcardBits);
           if (replacement!=null){
-            System.out.println(wildcardBits+" "+replacement);
             rewriter.replace(wildcardMaskToken.getTokenIndex(),
                         Ip.create((1L << (Prefix.MAX_PREFIX_LENGTH - replacement)) - 1).toString());
             System.out.println("subnet change (wildcard) at configuration "+SubnetModification.getHost()+" line: "+ipToken.getLine());
@@ -143,14 +142,25 @@ public class SubnetModifier extends Modifier<SubnetModification>{
           }
          }
 
+        private void mutateAddress(Token ipToken){
+          Ip ip = Ip.parse(ipToken.getText());
+          int subnetBits = Long.numberOfTrailingZeros(ip.asLong());
+          Integer replacement = mutate(subnetBits);
+          if (replacement != null){
+            rewriter.replace(ipToken.getTokenIndex(), Prefix.create(ip,replacement).toString());
+            System.out.println("subnet change (prefix, no mask) at configuration "+SubnetModification.getHost()+" line: "+ipToken.getLine());
+          }
+        }
+
         private Integer mutate(int orig) {
           Double num = generator.nextDouble()*100;
+          int check = generator.nextInt(2);
           if (num<SubnetModification.getPercent()){
-            if (orig < 32){
-              orig ++;
+            if (orig == 32){
+              orig --;
             }
             else {
-              orig --;
+              orig ++;
             }
             return orig;
           }
@@ -188,6 +198,9 @@ public class SubnetModifier extends Modifier<SubnetModification>{
 
         @Override
         public void exitNetwork_bgp_tail(Network_bgp_tailContext ctx) {
+          if (ctx.ip!= null && ctx.mask == null){
+            mutateAddress(ctx.ip);
+          }
           if (ctx.mask != null) {
             mutateSubnet(ctx.ip, ctx.mask);
           } else if (ctx.prefix != null) {
