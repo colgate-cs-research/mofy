@@ -25,6 +25,8 @@ public class Settings {
 
     private boolean Aclmodification = false;
 
+    private boolean Ipmodification = false;
+
     private boolean Permitmodification = false;
 
     private boolean Subnetmodification = false;
@@ -71,6 +73,9 @@ public class Settings {
         }
         else if (modifications.equals("Swap")){
           this.Swapmodification = true;
+        }
+        else if (modifications.equals("Ip")){
+          this.Ipmodification = true;
         }
 
     }
@@ -139,6 +144,10 @@ public class Settings {
 
     public boolean getpermit(){
       return Permitmodification;
+    }
+
+    public boolean getIp(){
+      return Ipmodification;
     }
 
     public boolean getsubnet(){

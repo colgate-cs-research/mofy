@@ -3,6 +3,8 @@ package edu.colgate.cs.mofy;
 import edu.colgate.cs.config.Settings;
 import edu.colgate.cs.modification.ACLModification;
 import edu.colgate.cs.modification.ACLModifier;
+import edu.colgate.cs.modification.IpModification;
+import edu.colgate.cs.modification.IpModifier;
 import edu.colgate.cs.modification.PermitModifier;
 import edu.colgate.cs.modification.PermitModification;
 import edu.colgate.cs.modification.SubnetModifier;
@@ -43,6 +45,8 @@ public class Mofy{
 
     private SwapModifier swapmodifier;
 
+    private IpModifier ipmodifier;
+
     private List<ACLModification> aclModifications;
 
     private List<PermitModification> permitModifications;
@@ -50,6 +54,8 @@ public class Mofy{
     private List<SubnetModification> subnetModifications;
 
     private List<SwapModification> swapModifications;
+
+    private List<IpModification> ipModifications;
 
 
     public Mofy(String[] args) {
@@ -127,6 +133,17 @@ public class Mofy{
               swapmodifier.generateModifiedConfigs(settings.getOutputDirectory());
             }
           }
+          if (settings.getIp()){
+            ipmodifier = new IpModifier(configs,settings);
+            deduceIpmodications();
+            for (IpModification mod:ipModifications){
+              ipmodifier.modify(mod);
+            }
+            if(settings.getOutputDirectory()!=null){
+              System.out.printf("Generating modified configs in : %s\n", settings.getOutputDirectory());
+              ipmodifier.generateModifiedConfigs(settings.getOutputDirectory());
+            }
+          }
         }
 
     /*
@@ -143,6 +160,9 @@ public class Mofy{
     }
     interface CreateSwapModification{
         void addSwapmod(String host);
+    }
+    interface CreateIpModification{
+        void addIpmod(String hose);
     }
 
 
@@ -239,6 +259,22 @@ public class Mofy{
         }
       }
 
+    private void deduceIpmodications(){
+      Set<Prefix> prefixes = new TreeSet<>();
+      HashSet<String> hostnames = new HashSet<String>();
+
+      Configuration genericConfiguration;
+      for (Config config: configs){
+        hostnames.add(config.getHostname());
+      }
+      ipModifications = new TreeList<>();
+      CreateIpModification createIpmods = (h) -> {
+          ipModifications.add(new IpModification(h, percentage, seed));
+      };
+      for (String host: hostnames){
+          createIpmods.addIpmod(host);
+      }
+    }
     /*
      * List all config files(ending with .cfg) in a directory.
      * @param dirPath Path to directory
