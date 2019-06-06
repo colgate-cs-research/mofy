@@ -13,54 +13,40 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
-public class PermitModifier extends Modifier<Modification>{
+public class PermitModifier extends Modifier<ModifierSetting>{
 
     private TokenStreamRewriter rewriter;
 
-    /** Current ACL Modification to be applied */
-    private Modification PermitModification;
+    /** Current ACL ModifierSetting to be applied */
+    private ModifierSetting PermitModifierSetting;
     private static String hostname;
-    private int percentage;
-    private long seed;
-    private static Random generator;
 
     /**
      * Creates an ACLModifier for a set of configuration.
      * @param configs List of Configs for the network to be modified.
      */
     public PermitModifier(List<Config> configs, Settings setting){
-        super(configs);
-        hostToConfigMap = new HashMap<>();
-        for (Config config: configs){
-            hostToConfigMap.put(config.getHostname(),config);
-        }
-        modificationHistoryMap = new HashMap<>();
-        for (Config config: configs){
-            modificationHistoryMap.put(config.getHostname(), 0);
-        }
-        generator = new Random(setting.getSeed());
+        super(configs, setting);
     }
 
     /**
      * Add ACL (specified by param) into chosen config.
-     * @param modification Modification needs to be made.
+     * @param ModifierSetting ModifierSetting needs to be made.
      */
-    public void modify(Modification Modification, String host){
-        this.PermitModification = Modification;
+    public void modify(ModifierSetting ModifierSetting, String host){
+        this.PermitModifierSetting = ModifierSetting;
         this.hostname = host;
         if (!hostToConfigMap.containsKey(hostname)){
             System.out.printf("Host %s : NOT FOUND!", hostname);
             return;
         }
-        this.percentage = PermitModification.getPercent();
-        this.seed =  PermitModification.getSeed();
         Config config = hostToConfigMap.get(hostname);
 
         ListTokenSource tokenSource = new ListTokenSource(config.getTokens());
         CommonTokenStream commonTokenStream = new CommonTokenStream(tokenSource);
         commonTokenStream.fill();
         rewriter = new TokenStreamRewriter(commonTokenStream);
-        PermitWalkListener listener = new PermitWalkListener(PermitModification, rewriter);
+        PermitWalkListener listener = new PermitWalkListener(PermitModifierSetting, rewriter);
         ParseTreeWalker walker = new ParseTreeWalker();
         walker.walk(listener,config.getParseTree());
 
@@ -77,25 +63,25 @@ public class PermitModifier extends Modifier<Modification>{
         Config config = new Config(rewriter.getText(),
                 hostname);
         hostToConfigMap.put(hostname, config);
-        modificationHistoryMap.put(hostname,
-                modificationHistoryMap.get(hostname)+1);
+        ModifierSettingHistoryMap.put(hostname,
+                ModifierSettingHistoryMap.get(hostname)+1);
     }
 
     static class PermitWalkListener extends  CiscoParserBaseListener{
 
-        Modification PermitModification;
+        ModifierSetting PermitModifierSetting;
         TokenStreamRewriter rewriter;
 
-        PermitWalkListener(Modification PermitModification,
+        PermitWalkListener(ModifierSetting PermitModifierSetting,
                                TokenStreamRewriter rewriter) {
-            this.PermitModification = PermitModification;
+            this.PermitModifierSetting = PermitModifierSetting;
             this.rewriter = rewriter;
         }
 
         @Override
         public void exitStandard_access_list_tail(Standard_access_list_tailContext ctx) {
           Double num = generator.nextDouble()*100;
-          if (num>(100-PermitModification.getPercent())){
+          if (num>(100-PermitModifierSetting.getPercent())){
             System.out.println("permit change at configuration "+hostname+" line: "+ctx.ala.getStart().getLine());
             if (ctx.ala.getStart().toString().contains("permit")){
               rewriter.replace(ctx.ala.getStart(),"deny");}
@@ -106,8 +92,8 @@ public class PermitModifier extends Modifier<Modification>{
         @Override
         public void exitExtended_access_list_tail(Extended_access_list_tailContext ctx) {
           Double num = generator.nextDouble()*100;
-          if (num>(100-PermitModification.getPercent())){
-            System.out.println("permit change at configuration"+hostname+" line: "+ctx.ala.getStart().getLine());
+          if (num>(100-PermitModifierSetting.getPercent())){
+            System.out.println("permit change at configuration "+hostname+" line: "+ctx.ala.getStart().getLine());
             if (ctx.ala.getStart().toString().contains("permit")){
               rewriter.replace(ctx.ala.getStart(),"deny");}
             else{

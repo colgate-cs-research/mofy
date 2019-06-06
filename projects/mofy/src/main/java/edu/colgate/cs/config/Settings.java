@@ -4,7 +4,7 @@ import edu.colgate.cs.mofy.Mofy;
 import org.apache.commons.cli.*;
 
 /**
- * Stores and parses settings for Network Config Modifications.
+ * Stores and parses settings for Network Config ModifierSettings.
  */
 
 public class Settings {
@@ -27,16 +27,6 @@ public class Settings {
     }
 
     private String outputDirectory;
-
-    // private boolean Aclmodification = false;
-    //
-    // private boolean Ipmodification = false;
-    //
-    // private boolean Permitmodification = false;
-    //
-    // private boolean Subnetmodification = false;
-    //
-    // private boolean Swapmodification = false;
 
     private int percent;
 
@@ -71,37 +61,21 @@ public class Settings {
 
         switch(modifications){
           case "Permit":
-            mod = modtype.Permit;
+            mod = modtype.valueOf(modifications);
             break;
           case "Subnet":
-            mod = modtype.Subnet;
+            mod = modtype.valueOf(modifications);
             break;
           case "Ip":
-            mod = modtype.Ip;
+            mod = modtype.valueOf(modifications);
             break;
           case "Swap":
-            mod = modtype.Swap;
+            mod = modtype.valueOf(modifications);
             break;
           default:
             System.out.println("invalid modification type");
             break;
         }
-
-        // if (modifications.equals("ACL")){
-        //   this.Aclmodification = true;
-        // }
-        // else if (modifications.equals("Permit")){
-        //   this.Permitmodification = true;
-        // }
-        // else if (modifications.equals("Subnet")){
-        //   this.Subnetmodification = true;
-        // }
-        // else if (modifications.equals("Swap")){
-        //   this.Swapmodification = true;
-        // }
-        // else if (modifications.equals("Ip")){
-        //   this.Ipmodification = true;
-        // }
 
     }
 
@@ -166,26 +140,6 @@ public class Settings {
     public modtype getmod(){
       return mod;
     }
-
-    // public boolean getacl(){
-    //   return Aclmodification;
-    // }
-    //
-    // public boolean getpermit(){
-    //   return Permitmodification;
-    // }
-    //
-    // public boolean getIp(){
-    //   return Ipmodification;
-    // }
-    //
-    // public boolean getsubnet(){
-    //   return Subnetmodification;
-    // }
-    //
-    // public boolean getswap(){
-    //   return Swapmodification;
-    // }
 
     public int getPercent(){
       return percent;

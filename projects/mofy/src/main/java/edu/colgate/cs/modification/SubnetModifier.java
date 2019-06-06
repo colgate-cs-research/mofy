@@ -25,53 +25,39 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
-public class SubnetModifier extends Modifier<Modification>{
+public class SubnetModifier extends Modifier<ModifierSetting>{
 
     private TokenStreamRewriter rewriter;
 
-    private Modification SubnetModification;
+    private ModifierSetting SubnetModifierSetting;
     private static String hostname;
-    private int percentage;
-    private long seed;
-    private static Random generator;
 
     /**
      * Creates an SubnetModifier for a set of configuration.
      * @param configs List of Configs for the network to be modified.
      */
     public SubnetModifier(List<Config> configs, Settings setting){
-        super(configs);
-        hostToConfigMap = new HashMap<>();
-        for (Config config: configs){
-            hostToConfigMap.put(config.getHostname(),config);
-        }
-        modificationHistoryMap = new HashMap<>();
-        for (Config config: configs){
-            modificationHistoryMap.put(config.getHostname(), 0);
-        }
-        generator = new Random(setting.getSeed());
+        super(configs,setting);
     }
 
     /**
      * Add ACL (specified by param) into chosen config.
-     * @param modification Modification needs to be made.
+     * @param ModifierSetting ModifierSetting needs to be made.
      */
-    public void modify(Modification Modification, String host){
-        this.SubnetModification = Modification;
+    public void modify(ModifierSetting ModifierSetting, String host){
+        this.SubnetModifierSetting = ModifierSetting;
         this.hostname = host;
         if (!hostToConfigMap.containsKey(hostname)){
             System.out.printf("Host %s : NOT FOUND!", hostname);
             return;
         }
-        this.percentage = SubnetModification.getPercent();
-        this.seed =  SubnetModification.getSeed();
         Config config = hostToConfigMap.get(hostname);
 
         ListTokenSource tokenSource = new ListTokenSource(config.getTokens());
         CommonTokenStream commonTokenStream = new CommonTokenStream(tokenSource);
         commonTokenStream.fill();
         rewriter = new TokenStreamRewriter(commonTokenStream);
-        SubnetWalkListener listener = new SubnetWalkListener(SubnetModification, rewriter);
+        SubnetWalkListener listener = new SubnetWalkListener(SubnetModifierSetting, rewriter);
         ParseTreeWalker walker = new ParseTreeWalker();
         walker.walk(listener,config.getParseTree());
 
@@ -88,18 +74,18 @@ public class SubnetModifier extends Modifier<Modification>{
         Config config = new Config(rewriter.getText(),
                 hostname);
         hostToConfigMap.put(hostname, config);
-        modificationHistoryMap.put(hostname,
-                modificationHistoryMap.get(hostname)+1);
+        ModifierSettingHistoryMap.put(hostname,
+                ModifierSettingHistoryMap.get(hostname)+1);
     }
 
     static class SubnetWalkListener extends  CiscoParserBaseListener{
 
-        Modification SubnetModification;
+        ModifierSetting SubnetModifierSetting;
         TokenStreamRewriter rewriter;
 
-        SubnetWalkListener(Modification SubnetModification,
+        SubnetWalkListener(ModifierSetting SubnetModifierSetting,
                                TokenStreamRewriter rewriter) {
-            this.SubnetModification = SubnetModification;
+            this.SubnetModifierSetting = SubnetModifierSetting;
             this.rewriter = rewriter;
         }
 
@@ -154,7 +140,7 @@ public class SubnetModifier extends Modifier<Modification>{
         private Integer mutate(int orig) {
           Double num = generator.nextDouble()*100;
           int check = generator.nextInt(2);
-          if (num<SubnetModification.getPercent()){
+          if (num<SubnetModifierSetting.getPercent()){
             if (orig == 32){
               orig --;
             }

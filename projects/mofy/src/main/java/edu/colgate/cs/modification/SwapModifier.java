@@ -27,16 +27,15 @@ import java.util.List;
 import java.util.Random;
 import java.util.ArrayList;
 
-public class SwapModifier extends Modifier<Modification>{
+public class SwapModifier extends Modifier<ModifierSetting>{
 
     private TokenStreamRewriter rewriter;
 
-    /** Current ACL Modification to be applied */
-    private Modification SwapModification;
+    /** Current ACL ModifierSetting to be applied */
+    private ModifierSetting SwapModifierSetting;
     private static String hostname;
     private int percentage;
     private long seed;
-    private static Random generator;
     private static ArrayList<Standard_access_list_tailContext> all_list;
     private static ArrayList<Extended_access_list_tailContext> all_list1;
     private static int count_standard;
@@ -48,33 +47,24 @@ public class SwapModifier extends Modifier<Modification>{
      * @param configs List of Configs for the network to be modified.
      */
     public SwapModifier(List<Config> configs, Settings setting){
-        super(configs);
-        hostToConfigMap = new HashMap<>();
-        for (Config config: configs){
-            hostToConfigMap.put(config.getHostname(),config);
-        }
-        modificationHistoryMap = new HashMap<>();
-        for (Config config: configs){
-            modificationHistoryMap.put(config.getHostname(), 0);
-        }
-        generator = new Random(setting.getSeed());
+        super(configs, setting);
     }
 
     /**
      * Add ACL (specified by param) into chosen config.
-     * @param modification Modification needs to be made.
+     * @param ModifierSetting ModifierSetting needs to be made.
      */
-    public void modify(Modification Modification, String host){
+    public void modify(ModifierSetting ModifierSetting, String host){
         this.all_list = new ArrayList<Standard_access_list_tailContext>();
         this.all_list1 = new ArrayList<Extended_access_list_tailContext>();
-        this.SwapModification = Modification;
-        String hostname = host;
+        this.SwapModifierSetting = ModifierSetting;
+        this.hostname = host;
         if (!hostToConfigMap.containsKey(hostname)){
             System.out.printf("Host %s : NOT FOUND!", hostname);
             return;
         }
-        this.percentage = SwapModification.getPercent();
-        this.seed =  SwapModification.getSeed();
+        this.percentage = SwapModifierSetting.getPercent();
+        this.seed =  SwapModifierSetting.getSeed();
         this.count_standard = 0;
         this.count_extended = 0;
         Config config = hostToConfigMap.get(hostname);
@@ -83,11 +73,11 @@ public class SwapModifier extends Modifier<Modification>{
         CommonTokenStream commonTokenStream = new CommonTokenStream(tokenSource);
         commonTokenStream.fill();
         rewriter = new TokenStreamRewriter(commonTokenStream);
-        SwapWalkListener listener = new SwapWalkListener(SwapModification, rewriter);
+        SwapWalkListener listener = new SwapWalkListener(SwapModifierSetting, rewriter);
         ParseTreeWalker walker = new ParseTreeWalker();
         walker.walk(listener,config.getParseTree());
         changelist();
-        ChangeWalkerListener listener1 = new ChangeWalkerListener(SwapModification, rewriter);
+        ChangeWalkerListener listener1 = new ChangeWalkerListener(SwapModifierSetting, rewriter);
         walker.walk(listener1,config.getParseTree());
         updateConfigMap(hostname);
         //Test Printout
@@ -106,8 +96,8 @@ public class SwapModifier extends Modifier<Modification>{
         Config config = new Config(rewriter.getText(),
                 hostname);
         hostToConfigMap.put(hostname, config);
-        modificationHistoryMap.put(hostname,
-                modificationHistoryMap.get(hostname)+1);
+        ModifierSettingHistoryMap.put(hostname,
+                ModifierSettingHistoryMap.get(hostname)+1);
     }
 
     private void changelist(){
@@ -116,7 +106,7 @@ public class SwapModifier extends Modifier<Modification>{
         for (int j = i+1; j < all_list.size(); j++){
           if (overlap(all_list.get(i),all_list.get(j))&&(!check.contains(all_list.get(i).ala.getStart().getLine()))&&(!check.contains(all_list.get(j).ala.getStart().getLine()))){
             Double num = generator.nextDouble()*100;
-            if (num>(100-SwapModification.getPercent())){
+            if (num>(100-SwapModifierSetting.getPercent())){
               Standard_access_list_tailContext temp = all_list.get(i);
               System.out.println("swap change(Standard) at configuration "+hostname+" line: "+all_list.get(i).ala.getStart().getLine());
               check.add(all_list.get(i).ala.getStart().getLine());
@@ -134,7 +124,7 @@ public class SwapModifier extends Modifier<Modification>{
         for (int j = i+1; j < all_list1.size(); j++){
           if (overlap(all_list1.get(i),all_list1.get(j))&&(!check.contains(all_list1.get(i).ala.getStart().getLine()))&&(!check.contains(all_list1.get(j).ala.getStart().getLine()))){
             Double num = generator.nextDouble()*100;
-            if (num>(100-SwapModification.getPercent())){
+            if (num>(100-SwapModifierSetting.getPercent())){
               Extended_access_list_tailContext temp = all_list1.get(i);
               System.out.println("swap change(Extended) at configuration "+hostname+" line: "+all_list1.get(i).ala.getStart().getLine());
               check.add(all_list1.get(i).ala.getStart().getLine());
@@ -201,12 +191,12 @@ public class SwapModifier extends Modifier<Modification>{
 
     static class SwapWalkListener extends  CiscoParserBaseListener{
 
-        Modification SwapModification;
+        ModifierSetting SwapModifierSetting;
         TokenStreamRewriter rewriter;
 
-        SwapWalkListener(Modification SwapModification,
+        SwapWalkListener(ModifierSetting SwapModifierSetting,
                                TokenStreamRewriter rewriter) {
-            this.SwapModification = SwapModification;
+            this.SwapModifierSetting = SwapModifierSetting;
             this.rewriter = rewriter;
         }
 
@@ -221,11 +211,11 @@ public class SwapModifier extends Modifier<Modification>{
         }
       }
     static class ChangeWalkerListener extends CiscoParserBaseListener{
-      Modification SwapModification;
+      ModifierSetting SwapModifierSetting;
       TokenStreamRewriter rewriter;
-      ChangeWalkerListener(Modification SwapModification,
+      ChangeWalkerListener(ModifierSetting SwapModifierSetting,
                               TokenStreamRewriter rewriter){
-            this.SwapModification = SwapModification;
+            this.SwapModifierSetting = SwapModifierSetting;
             this.rewriter = rewriter;
           }
         @Override

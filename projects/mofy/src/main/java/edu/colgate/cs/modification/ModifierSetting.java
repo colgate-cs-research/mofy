@@ -1,11 +1,11 @@
 package edu.colgate.cs.modification;
 
-public class Modification {
+public class ModifierSetting {
 
       private int percentage;
       private long seed;
 
-      public Modification(int percentage, long seed){
+      public ModifierSetting(int percentage, long seed){
         this.percentage = percentage;
         this.seed = seed;
 

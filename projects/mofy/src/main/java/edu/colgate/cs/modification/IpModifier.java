@@ -14,15 +14,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
-public class IpModifier extends Modifier<Modification>{
+public class IpModifier extends Modifier<ModifierSetting>{
 
     private TokenStreamRewriter rewriter;
 
-    /** Current ACL Modification to be applied */
-    private Modification IpModification;
+    /** Current ACL ModifierSetting to be applied */
+    private ModifierSetting IpModifierSetting;
     private static String hostname;
-    private int percentage;
-    private long seed;
     private static Random generator;
 
     /**
@@ -30,38 +28,28 @@ public class IpModifier extends Modifier<Modification>{
      * @param configs List of Configs for the network to be modified.
      */
     public IpModifier(List<Config> configs, Settings setting){
-        super(configs);
-        hostToConfigMap = new HashMap<>();
-        for (Config config: configs){
-            hostToConfigMap.put(config.getHostname(),config);
-        }
-        modificationHistoryMap = new HashMap<>();
-        for (Config config: configs){
-            modificationHistoryMap.put(config.getHostname(), 0);
-        }
+        super(configs, setting);
         generator = new Random(setting.getSeed());
     }
 
     /**
      * Add ACL (specified by param) into chosen config.
-     * @param modification Modification needs to be made.
+     * @param ModifierSetting ModifierSetting needs to be made.
      */
-    public void modify(Modification Modification, String host){
-        this.IpModification = Modification;
-        String hostname = host;
+    public void modify(ModifierSetting ModifierSetting, String host){
+        this.IpModifierSetting = ModifierSetting;
+        this.hostname = host;
         if (!hostToConfigMap.containsKey(hostname)){
             System.out.printf("Host %s : NOT FOUND!", hostname);
             return;
         }
-        this.percentage = IpModification.getPercent();
-        this.seed =  IpModification.getSeed();
         Config config = hostToConfigMap.get(hostname);
 
         ListTokenSource tokenSource = new ListTokenSource(config.getTokens());
         CommonTokenStream commonTokenStream = new CommonTokenStream(tokenSource);
         commonTokenStream.fill();
         rewriter = new TokenStreamRewriter(commonTokenStream);
-        IpWalkListener listener = new IpWalkListener(IpModification, rewriter);
+        IpWalkListener listener = new IpWalkListener(IpModifierSetting, rewriter);
         ParseTreeWalker walker = new ParseTreeWalker();
         walker.walk(listener,config.getParseTree());
 
@@ -78,18 +66,18 @@ public class IpModifier extends Modifier<Modification>{
         Config config = new Config(rewriter.getText(),
                 hostname);
         hostToConfigMap.put(hostname, config);
-        modificationHistoryMap.put(hostname,
-                modificationHistoryMap.get(hostname)+1);
+        ModifierSettingHistoryMap.put(hostname,
+                ModifierSettingHistoryMap.get(hostname)+1);
     }
 
     static class IpWalkListener extends  CiscoParserBaseListener{
 
-        Modification IpModification;
+        ModifierSetting IpModifierSetting;
         TokenStreamRewriter rewriter;
 
-        IpWalkListener(Modification IpModification,
+        IpWalkListener(ModifierSetting IpModifierSetting,
                                TokenStreamRewriter rewriter) {
-            this.IpModification = IpModification;
+            this.IpModifierSetting = IpModifierSetting;
             this.rewriter = rewriter;
         }
 
@@ -119,7 +107,7 @@ public class IpModifier extends Modifier<Modification>{
           String[] addrArray = IpString.split("\\.");
           Double num = generator.nextDouble()*100;
           int check = generator.nextInt(4);
-          if (num < IpModification.getPercent()){
+          if (num < IpModifierSetting.getPercent()){
             if (addrArray[check].length()>1){
               addrArray[check] = addrArray[check].substring(0,addrArray[check].length()-1);
             }
