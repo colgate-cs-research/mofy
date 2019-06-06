@@ -1,0 +1,6 @@
+language: java
+jdk:
+    - oraclejdk8
+
+notifications:
+    slack: colgatenetresearch:9fESg2lKlNnZwusFv4UqLf56
