@@ -33,7 +33,10 @@ done <<<$(ls $TEST_ROOT/cases/)
 
 if  [ $PASS_COUNT -eq $TEST_COUNT ]; then
     echo $GREEN
+    FINAL_RESULT=$TEST_PASS
 else
     echo $RED
+    FINAL_RESULT=$TEST_FAIL
 fi
 echo $PASS_COUNT of $TEST_COUNT tests passed$NORMAL
+exit $FINAL_RESULT

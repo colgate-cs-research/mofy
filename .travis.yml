@@ -4,5 +4,17 @@ jdk:
 
 install: .travis/install.sh
 
+script: test/test.sh
+
+# Cache the maven dependencies installed
+cache:
+    directories:
+        - $HOME/.m2
+
+# Delete the batfish and mofy jars, which change every build, from the cache.
+before_cache:
+    - rm -rf $HOME/.m2/repository/org/batfish
+    - rm -rf $HOME/.m2/repository/edu/colgate
+
 notifications:
     slack: colgatenetresearch:9fESg2lKlNnZwusFv4UqLf56
