@@ -2,5 +2,7 @@ language: java
 jdk:
     - oraclejdk8
 
+install: .travis/install.sh
+
 notifications:
     slack: colgatenetresearch:9fESg2lKlNnZwusFv4UqLf56
