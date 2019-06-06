@@ -4,7 +4,7 @@ jdk:
 
 install: .travis/install.sh
 
-script: test/test.sh
+script: mvn install && test/test.sh
 
 # Cache the maven dependencies installed
 cache:
