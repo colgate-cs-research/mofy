@@ -27,13 +27,13 @@ import java.util.List;
 import java.util.Random;
 import java.util.ArrayList;
 
-public class SwapModifier extends Modifier<SwapModification>{
+public class SwapModifier extends Modifier<Modification>{
 
     private TokenStreamRewriter rewriter;
 
     /** Current ACL Modification to be applied */
-    private SwapModification SwapModification;
-
+    private Modification SwapModification;
+    private static String hostname;
     private int percentage;
     private long seed;
     private static Random generator;
@@ -64,11 +64,11 @@ public class SwapModifier extends Modifier<SwapModification>{
      * Add ACL (specified by param) into chosen config.
      * @param modification Modification needs to be made.
      */
-    public void modify(SwapModification Modification){
+    public void modify(Modification Modification, String host){
         this.all_list = new ArrayList<Standard_access_list_tailContext>();
         this.all_list1 = new ArrayList<Extended_access_list_tailContext>();
         this.SwapModification = Modification;
-        String hostname = SwapModification.getHost();
+        String hostname = host;
         if (!hostToConfigMap.containsKey(hostname)){
             System.out.printf("Host %s : NOT FOUND!", hostname);
             return;
@@ -118,9 +118,9 @@ public class SwapModifier extends Modifier<SwapModification>{
             Double num = generator.nextDouble()*100;
             if (num>(100-SwapModification.getPercent())){
               Standard_access_list_tailContext temp = all_list.get(i);
-              System.out.println("swap change at configuration "+SwapModification.getHost()+" line: "+all_list.get(i).ala.getStart().getLine());
+              System.out.println("swap change(Standard) at configuration "+hostname+" line: "+all_list.get(i).ala.getStart().getLine());
               check.add(all_list.get(i).ala.getStart().getLine());
-              System.out.println("swap change at configuration "+SwapModification.getHost()+" line: "+all_list.get(j).ala.getStart().getLine());
+              System.out.println("swap change(Standard) at configuration "+hostname+" line: "+all_list.get(j).ala.getStart().getLine());
               check.add(all_list.get(i).ala.getStart().getLine());
               all_list.set(i, all_list.get(j));
               all_list.set(j, temp);
@@ -136,9 +136,9 @@ public class SwapModifier extends Modifier<SwapModification>{
             Double num = generator.nextDouble()*100;
             if (num>(100-SwapModification.getPercent())){
               Extended_access_list_tailContext temp = all_list1.get(i);
-              System.out.println("swap change at configuration "+SwapModification.getHost()+" line: "+all_list1.get(i).ala.getStart().getLine());
+              System.out.println("swap change(Extended) at configuration "+hostname+" line: "+all_list1.get(i).ala.getStart().getLine());
               check.add(all_list1.get(i).ala.getStart().getLine());
-              System.out.println("swap change at configuration "+SwapModification.getHost()+" line: "+all_list1.get(j).ala.getStart().getLine());
+              System.out.println("swap change(Extended) at configuration "+hostname+" line: "+all_list1.get(j).ala.getStart().getLine());
               check.add(all_list1.get(i).ala.getStart().getLine());
               all_list1.set(i, all_list1.get(j));
               all_list1.set(j, temp);
@@ -192,43 +192,7 @@ public class SwapModifier extends Modifier<SwapModification>{
 
     private boolean overlap(Standard_access_list_tailContext ctx1, Standard_access_list_tailContext ctx2){
       return overlap(ctx1.ipr,ctx2.ipr);
-    //   if (ctx1.ipr.prefix != null && ctx2.ipr.prefix !=null){
-    //   int subnet_1 = Integer.parseInt(ctx1.ipr.prefix.getText());
-    //   int subnet_2 = Integer.parseInt(ctx2.ipr.prefix.getText());
-    //   int common;
-    //   if (subnet_1>subnet_2){
-    //     common = subnet_2;
-    //   }
-    //   else{
-    //     common = subnet_1;
-    //   }
-    //   for (int i =0; i < common; i++){
-    //     if (Ip.getBitAtPosition(new Ip(ctx1.ipr.ip.getText()), i) != Ip.getBitAtPosition(new Ip(ctx2.ipr.ip.getText()), i)){
-    //       return false;
-    //     }
-    //   }
-    //   return true;
-    // }
-    // if (ctx1.ipr.wildcard != null && ctx2.ipr.wildcard !=null){
-    // IpWildcard card_1 = new IpWildcard(new Ip(ctx1.ipr.ip.getText()), new Ip(ctx1.ipr.wildcard.getText()));
-    // IpWildcard card_2 = new IpWildcard(new Ip(ctx2.ipr.ip.getText()), new Ip(ctx2.ipr.wildcard.getText()));
-    // int subnet_1 = card_1.toPrefix().getPrefixLength();
-    // int subnet_2 = card_2.toPrefix().getPrefixLength();
-    // int common;
-    // if (subnet_1>subnet_2){
-    //   common = subnet_2;
-    // }
-    // else{
-    //   common = subnet_1;
-    // }
-    // for (int i =0; i < common; i++){
-    //   if (Ip.getBitAtPosition(new Ip(ctx1.ipr.ip.getText()), i) != Ip.getBitAtPosition(new Ip(ctx2.ipr.ip.getText()), i)){
-    //     return false;
-    //   }
-    // }
-    // return true;
-    // }
-    // return false;
+
     }
 
     private boolean overlap(Extended_access_list_tailContext ctx1, Extended_access_list_tailContext ctx2){
@@ -237,10 +201,10 @@ public class SwapModifier extends Modifier<SwapModification>{
 
     static class SwapWalkListener extends  CiscoParserBaseListener{
 
-        SwapModification SwapModification;
+        Modification SwapModification;
         TokenStreamRewriter rewriter;
 
-        SwapWalkListener(SwapModification SwapModification,
+        SwapWalkListener(Modification SwapModification,
                                TokenStreamRewriter rewriter) {
             this.SwapModification = SwapModification;
             this.rewriter = rewriter;
@@ -257,19 +221,20 @@ public class SwapModifier extends Modifier<SwapModification>{
         }
       }
     static class ChangeWalkerListener extends CiscoParserBaseListener{
-      SwapModification SwapModification;
+      Modification SwapModification;
       TokenStreamRewriter rewriter;
-      ChangeWalkerListener(SwapModification SwapModification,
+      ChangeWalkerListener(Modification SwapModification,
                               TokenStreamRewriter rewriter){
             this.SwapModification = SwapModification;
             this.rewriter = rewriter;
           }
         @Override
         public void exitStandard_access_list_tail(Standard_access_list_tailContext ctx){
-          if (ctx.ipr.ip != null){
-          rewriter.replace(ctx.ipr.ip,all_list.get(count_standard).ipr.ip.getText());}
-          if (ctx.ipr.prefix !=null){
+          if (ctx.ipr.prefix !=null ){
           rewriter.replace(ctx.ipr.prefix,all_list.get(count_standard).ipr.prefix.getText());}
+          else if (ctx.ipr.ip != null && ctx.ipr.wildcard!= null){
+          rewriter.replace(ctx.ipr.ip,all_list.get(count_standard).ipr.ip.getText());
+          rewriter.replace(ctx.ipr.wildcard, all_list.get(count_standard).ipr.wildcard.getText());}
           rewriter.replace(ctx.ala.getStart(), all_list.get(count_standard).ala.getStart().getText());
           count_standard++;
           }

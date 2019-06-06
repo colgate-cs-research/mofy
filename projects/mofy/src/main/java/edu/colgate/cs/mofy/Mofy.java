@@ -1,16 +1,12 @@
 package edu.colgate.cs.mofy;
 
 import edu.colgate.cs.config.Settings;
-import edu.colgate.cs.modification.ACLModification;
-import edu.colgate.cs.modification.ACLModifier;
-import edu.colgate.cs.modification.IpModification;
+import edu.colgate.cs.modification.Modification;
+import edu.colgate.cs.modification.Modifier;
 import edu.colgate.cs.modification.IpModifier;
 import edu.colgate.cs.modification.PermitModifier;
-import edu.colgate.cs.modification.PermitModification;
 import edu.colgate.cs.modification.SubnetModifier;
-import edu.colgate.cs.modification.SubnetModification;
 import edu.colgate.cs.modification.SwapModifier;
-import edu.colgate.cs.modification.SwapModification;
 import edu.colgate.cs.modification.Config;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.collections4.list.TreeList;
@@ -37,8 +33,6 @@ public class Mofy{
     private int percentage;
     private long seed;
 
-    private ACLModifier aclmodifier;
-
     private PermitModifier permitmodifier;
 
     private SubnetModifier subnetmodifier;
@@ -47,15 +41,11 @@ public class Mofy{
 
     private IpModifier ipmodifier;
 
-    private List<ACLModification> aclModifications;
+    private Modifier modifier;
 
-    private List<PermitModification> permitModifications;
+    private Modification modification;
 
-    private List<SubnetModification> subnetModifications;
-
-    private List<SwapModification> swapModifications;
-
-    private List<IpModification> ipModifications;
+    private Settings.modtype mod;
 
 
     public Mofy(String[] args) {
@@ -66,6 +56,7 @@ public class Mofy{
         }
         configs = new ArrayList<>();
     }
+
 
     public void run(){
         try {
@@ -87,82 +78,102 @@ public class Mofy{
         }
         this.percentage = settings.getPercent();
         this.seed = settings.getSeed();
-        if (settings.getacl()){
-          aclmodifier = new ACLModifier(configs);
-          deduceACLModifications();
-          for (ACLModification mod:aclModifications) {
-              aclmodifier.modify(mod);
-              break;
-          }
-          if (settings.getOutputDirectory()!=null){
-              System.out.printf("Generating modified configs in : %s\n", settings.getOutputDirectory());
-              aclmodifier.generateModifiedConfigs(settings.getOutputDirectory());
-          }
+        this.mod = settings.getmod();
+        this.modification = new Modification (this.percentage, this.seed);
+
+        switch(this.mod){
+          case Permit:
+            this.modifier = new PermitModifier(configs,settings);
+            break;
+          case Subnet:
+            this.modifier = new SubnetModifier(configs,settings);
+            break;
+          case Ip:
+            this.modifier = new IpModifier(configs,settings);
+            break;
+          case Swap:
+            this.modifier = new SwapModifier(configs,settings);
+          default:
+            System.out.println("invalid modification type");
+            break;
         }
 
-        if (settings.getpermit()){
-          permitmodifier = new PermitModifier(configs,settings);
-          deducePermitmodifications();
-          for (PermitModification mod:permitModifications){
-              permitmodifier.modify(mod);
-            }
-            if (settings.getOutputDirectory()!=null){
-                System.out.printf("Generating modified configs in : %s\n", settings.getOutputDirectory());
-                permitmodifier.generateModifiedConfigs(settings.getOutputDirectory());
-            }
+          HashSet<String> hostnames = new HashSet<String>();
+
+          Configuration genericConfiguration;
+          for (Config config: configs){
+            hostnames.add(config.getHostname());
           }
-          if (settings.getsubnet()){
-            subnetmodifier = new SubnetModifier(configs,settings);
-            deduceSubnetmodifications();
-            for (SubnetModification mod:subnetModifications){
-              subnetmodifier.modify(mod);
-            }
-            if (settings.getOutputDirectory()!=null){
-                System.out.printf("Generating modified configs in : %s\n", settings.getOutputDirectory());
-                subnetmodifier.generateModifiedConfigs(settings.getOutputDirectory());
-            }
-          }
-          if (settings.getswap()){
-            swapmodifier = new SwapModifier(configs,settings);
-            deduceSwapmodications();
-            for (SwapModification mod:swapModifications){
-              swapmodifier.modify(mod);
-            }
-            if(settings.getOutputDirectory()!=null){
-              System.out.printf("Generating modified configs in : %s\n", settings.getOutputDirectory());
-              swapmodifier.generateModifiedConfigs(settings.getOutputDirectory());
-            }
-          }
-          if (settings.getIp()){
-            ipmodifier = new IpModifier(configs,settings);
-            deduceIpmodications();
-            for (IpModification mod:ipModifications){
-              ipmodifier.modify(mod);
-            }
-            if(settings.getOutputDirectory()!=null){
-              System.out.printf("Generating modified configs in : %s\n", settings.getOutputDirectory());
-              ipmodifier.generateModifiedConfigs(settings.getOutputDirectory());
-            }
-          }
+
+        for (String host: hostnames){
+          modifier.modify(modification, host);
         }
+        if (settings.getOutputDirectory()!=null){
+            System.out.printf("Generating modified configs in : %s\n", settings.getOutputDirectory());
+            this.modifier.generateModifiedConfigs(settings.getOutputDirectory());
+        }
+
+        // if (settings.getpermit()){
+        //   permitmodifier = new PermitModifier(configs,settings);
+        //   deducePermitmodifications();
+        //   for (PermitModification mod:permitModifications){
+        //       permitmodifier.modify(mod);
+        //     }
+        //     if (settings.getOutputDirectory()!=null){
+        //         System.out.printf("Generating modified configs in : %s\n", settings.getOutputDirectory());
+        //         permitmodifier.generateModifiedConfigs(settings.getOutputDirectory());
+        //     }
+        //   }
+        //   if (settings.getsubnet()){
+        //     subnetmodifier = new SubnetModifier(configs,settings);
+        //     deduceSubnetmodifications();
+        //     for (SubnetModification mod:subnetModifications){
+        //       subnetmodifier.modify(mod);
+        //     }
+        //     if (settings.getOutputDirectory()!=null){
+        //         System.out.printf("Generating modified configs in : %s\n", settings.getOutputDirectory());
+        //         subnetmodifier.generateModifiedConfigs(settings.getOutputDirectory());
+        //     }
+        //   }
+        //   if (settings.getswap()){
+        //     swapmodifier = new SwapModifier(configs,settings);
+        //     deduceSwapmodications();
+        //     for (SwapModification mod:swapModifications){
+        //       swapmodifier.modify(mod);
+        //     }
+        //     if(settings.getOutputDirectory()!=null){
+        //       System.out.printf("Generating modified configs in : %s\n", settings.getOutputDirectory());
+        //       swapmodifier.generateModifiedConfigs(settings.getOutputDirectory());
+        //     }
+        //   }
+        //   if (settings.getIp()){
+        //     ipmodifier = new IpModifier(configs,settings);
+        //     deduceIpmodications();
+        //     for (IpModification mod:ipModifications){
+        //       ipmodifier.modify(mod);
+        //     }
+        //     if(settings.getOutputDirectory()!=null){
+        //       System.out.printf("Generating modified configs in : %s\n", settings.getOutputDirectory());
+        //       ipmodifier.generateModifiedConfigs(settings.getOutputDirectory());
+        //     }
+        //   }
+        // }
 
     /*
      * Playing around with Lambdas. TODO: Replace this with simple method.
      */
-    interface CreateModification{
-        void addACLmod(String host, List<Interface> ifaces, Prefix network);
-    }
-    interface CreatePermitModification{
-        void addPermitmod(String host);
-    }
-    interface CreateSubnetModification{
-        void addSubnetmod(String host);
-    }
-    interface CreateSwapModification{
-        void addSwapmod(String host);
-    }
-    interface CreateIpModification{
-        void addIpmod(String hose);
+    // interface CreatePermitModification{
+    //     void addPermitmod(String host);
+    // }
+    // interface CreateSubnetModification{
+    //     void addSubnetmod(String host);
+    // }
+    // interface CreateSwapModification{
+    //     void addSwapmod(String host);
+    // }
+    // interface CreateIpModification{
+    //     void addIpmod(String host);
+    // }
     }
 
 
@@ -171,110 +182,75 @@ public class Mofy{
      * Deduce the set of all possible ACLs that may be
      * added to the network configuration files.
      */
-    private void deduceACLModifications(){
-
-        Set<Prefix> prefixes = new TreeSet<>();
-        Map<String,List<Interface>> hostToIfaces = new TreeMap<>();
-
-        Configuration genericConfiguration;
-        for (Config config: configs){
-            genericConfiguration = config.getGenericConfiguration();
-            Map<String, Interface> interfaceMap = genericConfiguration.getInterfaces();
-            hostToIfaces.put(config.getHostname(), new TreeList<>());
-
-            for (String interfaceName : interfaceMap.keySet()){
-                Interface iface = interfaceMap.get(interfaceName);
-                hostToIfaces.get(config.getHostname()).add(iface);
-                prefixes.add(iface.getAddress().getPrefix());
-            }
-        }
-
-        aclModifications = new TreeList<>();
-
-        CreateModification createACLmods = (h, ifaces, network) -> {
-            for(Interface i : ifaces){
-                if (!network.containsIp(i.getAddress().getIp())) {
-                    aclModifications.add(new ACLModification(h, i, network, true, true, percentage, seed));
-                }
-            }
-        };
-
-        for (Prefix network: prefixes){
-            for (String host: hostToIfaces.keySet()){
-                createACLmods.addACLmod(host, hostToIfaces.get(host), network);
-            }
-        }
-
-    }
 
 
-    private void deducePermitmodifications(){
-      Set<Prefix> prefixes = new TreeSet<>();
-      HashSet<String> hostnames = new HashSet<String>();
-
-      Configuration genericConfiguration;
-      for (Config config: configs){
-        hostnames.add(config.getHostname());
-      }
-      permitModifications = new TreeList<>();
-      CreatePermitModification createPermitmods = (h) -> {
-          permitModifications.add(new PermitModification(h, percentage, seed));
-      };
-      for (String host: hostnames){
-          createPermitmods.addPermitmod(host);
-        }
-      }
-
-    private void deduceSubnetmodifications(){
-      Set<Prefix> prefixes = new TreeSet<>();
-      HashSet<String> hostnames = new HashSet<String>();
-
-      Configuration genericConfiguration;
-      for (Config config: configs){
-        hostnames.add(config.getHostname());
-      }
-      subnetModifications = new TreeList<>();
-      CreateSubnetModification createSubnetmods = (h) -> {
-          subnetModifications.add(new SubnetModification(h, percentage, seed));
-      };
-      for (String host: hostnames){
-          createSubnetmods.addSubnetmod(host);
-        }
-      }
-
-    private void deduceSwapmodications(){
-      Set<Prefix> prefixes = new TreeSet<>();
-      HashSet<String> hostnames = new HashSet<String>();
-
-      Configuration genericConfiguration;
-      for (Config config: configs){
-        hostnames.add(config.getHostname());
-      }
-      swapModifications = new TreeList<>();
-      CreateSwapModification createSwapmods = (h) -> {
-          swapModifications.add(new SwapModification(h, percentage, seed));
-      };
-      for (String host: hostnames){
-          createSwapmods.addSwapmod(host);
-        }
-      }
-
-    private void deduceIpmodications(){
-      Set<Prefix> prefixes = new TreeSet<>();
-      HashSet<String> hostnames = new HashSet<String>();
-
-      Configuration genericConfiguration;
-      for (Config config: configs){
-        hostnames.add(config.getHostname());
-      }
-      ipModifications = new TreeList<>();
-      CreateIpModification createIpmods = (h) -> {
-          ipModifications.add(new IpModification(h, percentage, seed));
-      };
-      for (String host: hostnames){
-          createIpmods.addIpmod(host);
-      }
-    }
+    // private void deducePermitmodifications(){
+    //   Set<Prefix> prefixes = new TreeSet<>();
+    //   HashSet<String> hostnames = new HashSet<String>();
+    //
+    //   Configuration genericConfiguration;
+    //   for (Config config: configs){
+    //     hostnames.add(config.getHostname());
+    //   }
+    //   permitModifications = new TreeList<>();
+    //   CreatePermitModification createPermitmods = (h) -> {
+    //       permitModifications.add(new PermitModification(h, percentage, seed));
+    //   };
+    //   for (String host: hostnames){
+    //       createPermitmods.addPermitmod(host);
+    //     }
+    //   }
+    //
+    // private void deduceSubnetmodifications(){
+    //   Set<Prefix> prefixes = new TreeSet<>();
+    //   HashSet<String> hostnames = new HashSet<String>();
+    //
+    //   Configuration genericConfiguration;
+    //   for (Config config: configs){
+    //     hostnames.add(config.getHostname());
+    //   }
+    //   subnetModifications = new TreeList<>();
+    //   CreateSubnetModification createSubnetmods = (h) -> {
+    //       subnetModifications.add(new SubnetModification(h, percentage, seed));
+    //   };
+    //   for (String host: hostnames){
+    //       createSubnetmods.addSubnetmod(host);
+    //     }
+    //   }
+    //
+    // private void deduceSwapmodications(){
+    //   Set<Prefix> prefixes = new TreeSet<>();
+    //   HashSet<String> hostnames = new HashSet<String>();
+    //
+    //   Configuration genericConfiguration;
+    //   for (Config config: configs){
+    //     hostnames.add(config.getHostname());
+    //   }
+    //   swapModifications = new TreeList<>();
+    //   CreateSwapModification createSwapmods = (h) -> {
+    //       swapModifications.add(new SwapModification(h, percentage, seed));
+    //   };
+    //   for (String host: hostnames){
+    //       createSwapmods.addSwapmod(host);
+    //     }
+    //   }
+    //
+    // private void deduceIpmodications(){
+    //   Set<Prefix> prefixes = new TreeSet<>();
+    //   HashSet<String> hostnames = new HashSet<String>();
+    //
+    //   Configuration genericConfiguration;
+    //   for (Config config: configs){
+    //     hostnames.add(config.getHostname());
+    //   }
+    //   ipModifications = new TreeList<>();
+    //   CreateIpModification createIpmods = (h) -> {
+    //       ipModifications.add(new IpModification(h, percentage, seed));
+    //   };
+    //   for (String host: hostnames){
+    //       createIpmods.addIpmod(host);
+    //   }
+    // }
     /*
      * List all config files(ending with .cfg) in a directory.
      * @param dirPath Path to directory

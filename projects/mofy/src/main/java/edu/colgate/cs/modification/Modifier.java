@@ -58,6 +58,6 @@ public abstract class Modifier<E extends Modification> {
     /**
      * Perform given modification.
      */
-    public abstract void modify(E modification);
+    public abstract void modify(E modification, String hostname);
 
 }

@@ -21,23 +21,30 @@ public class Settings {
     private String configsDirectory;
 
     /** Where are the modified configuration files to be stored? */
+
+    public enum modtype{
+      Ip, Permit, Subnet, Swap
+    }
+
     private String outputDirectory;
 
-    private boolean Aclmodification = false;
-
-    private boolean Ipmodification = false;
-
-    private boolean Permitmodification = false;
-
-    private boolean Subnetmodification = false;
-
-    private boolean Swapmodification = false;
+    // private boolean Aclmodification = false;
+    //
+    // private boolean Ipmodification = false;
+    //
+    // private boolean Permitmodification = false;
+    //
+    // private boolean Subnetmodification = false;
+    //
+    // private boolean Swapmodification = false;
 
     private int percent;
 
     private long seed;
 
     private String modifications;
+
+    private modtype mod;
 
     public Settings(String[] args) throws ParseException{
         Options options = this.getOptions();
@@ -62,21 +69,39 @@ public class Settings {
         seed = Integer.parseInt(line.getOptionValue(SEED));
 
 
-        if (modifications.equals("ACL")){
-          this.Aclmodification = true;
+        switch(modifications){
+          case "Permit":
+            mod = modtype.Permit;
+            break;
+          case "Subnet":
+            mod = modtype.Subnet;
+            break;
+          case "Ip":
+            mod = modtype.Ip;
+            break;
+          case "Swap":
+            mod = modtype.Swap;
+            break;
+          default:
+            System.out.println("invalid modification type");
+            break;
         }
-        else if (modifications.equals("Permit")){
-          this.Permitmodification = true;
-        }
-        else if (modifications.equals("Subnet")){
-          this.Subnetmodification = true;
-        }
-        else if (modifications.equals("Swap")){
-          this.Swapmodification = true;
-        }
-        else if (modifications.equals("Ip")){
-          this.Ipmodification = true;
-        }
+
+        // if (modifications.equals("ACL")){
+        //   this.Aclmodification = true;
+        // }
+        // else if (modifications.equals("Permit")){
+        //   this.Permitmodification = true;
+        // }
+        // else if (modifications.equals("Subnet")){
+        //   this.Subnetmodification = true;
+        // }
+        // else if (modifications.equals("Swap")){
+        //   this.Swapmodification = true;
+        // }
+        // else if (modifications.equals("Ip")){
+        //   this.Ipmodification = true;
+        // }
 
     }
 
@@ -138,25 +163,29 @@ public class Settings {
         return outputDirectory;
     }
 
-    public boolean getacl(){
-      return Aclmodification;
+    public modtype getmod(){
+      return mod;
     }
 
-    public boolean getpermit(){
-      return Permitmodification;
-    }
-
-    public boolean getIp(){
-      return Ipmodification;
-    }
-
-    public boolean getsubnet(){
-      return Subnetmodification;
-    }
-
-    public boolean getswap(){
-      return Swapmodification;
-    }
+    // public boolean getacl(){
+    //   return Aclmodification;
+    // }
+    //
+    // public boolean getpermit(){
+    //   return Permitmodification;
+    // }
+    //
+    // public boolean getIp(){
+    //   return Ipmodification;
+    // }
+    //
+    // public boolean getsubnet(){
+    //   return Subnetmodification;
+    // }
+    //
+    // public boolean getswap(){
+    //   return Swapmodification;
+    // }
 
     public int getPercent(){
       return percent;

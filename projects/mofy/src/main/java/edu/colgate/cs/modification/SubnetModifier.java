@@ -25,19 +25,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
-public class SubnetModifier extends Modifier<SubnetModification>{
+public class SubnetModifier extends Modifier<Modification>{
 
     private TokenStreamRewriter rewriter;
 
-    /** Current ACL Modification to be applied */
-    private SubnetModification SubnetModification;
-
+    private Modification SubnetModification;
+    private static String hostname;
     private int percentage;
     private long seed;
     private static Random generator;
 
     /**
-     * Creates an ACLModifier for a set of configuration.
+     * Creates an SubnetModifier for a set of configuration.
      * @param configs List of Configs for the network to be modified.
      */
     public SubnetModifier(List<Config> configs, Settings setting){
@@ -57,9 +56,9 @@ public class SubnetModifier extends Modifier<SubnetModification>{
      * Add ACL (specified by param) into chosen config.
      * @param modification Modification needs to be made.
      */
-    public void modify(SubnetModification Modification){
+    public void modify(Modification Modification, String host){
         this.SubnetModification = Modification;
-        String hostname = SubnetModification.getHost();
+        this.hostname = host;
         if (!hostToConfigMap.containsKey(hostname)){
             System.out.printf("Host %s : NOT FOUND!", hostname);
             return;
@@ -95,10 +94,10 @@ public class SubnetModifier extends Modifier<SubnetModification>{
 
     static class SubnetWalkListener extends  CiscoParserBaseListener{
 
-        SubnetModification SubnetModification;
+        Modification SubnetModification;
         TokenStreamRewriter rewriter;
 
-        SubnetWalkListener(SubnetModification SubnetModification,
+        SubnetWalkListener(Modification SubnetModification,
                                TokenStreamRewriter rewriter) {
             this.SubnetModification = SubnetModification;
             this.rewriter = rewriter;
@@ -113,7 +112,7 @@ public class SubnetModifier extends Modifier<SubnetModification>{
           if (replacement!=null){
             rewriter.replace(subnetMaskToken.getTokenIndex(),
                 Ip.numSubnetBitsToSubnetMask(replacement).toString());
-            System.out.println("subnet change (subnet) at configuration "+SubnetModification.getHost()+" line: "+ipToken.getLine());
+            System.out.println("subnet change (subnet) at configuration "+hostname+" line: "+ipToken.getLine());
           }
         }
 
@@ -126,7 +125,7 @@ public class SubnetModifier extends Modifier<SubnetModification>{
           if (replacement!=null){
             rewriter.replace(wildcardMaskToken.getTokenIndex(),
                         Ip.create((1L << (Prefix.MAX_PREFIX_LENGTH - replacement)) - 1).toString());
-            System.out.println("subnet change (wildcard) at configuration "+SubnetModification.getHost()+" line: "+ipToken.getLine());
+            System.out.println("subnet change (wildcard) at configuration "+hostname+" line: "+ipToken.getLine());
           }
       }
 
@@ -138,7 +137,7 @@ public class SubnetModifier extends Modifier<SubnetModification>{
           Integer replacement = mutate(subnetBits);
           if (replacement != null){
             rewriter.replace(prefixToken.getTokenIndex(), Prefix.create(ip, replacement).toString());
-            System.out.println("subnet change (prefix) at configuration "+SubnetModification.getHost()+" line: "+prefixToken.getLine());
+            System.out.println("subnet change (prefix) at configuration "+hostname+" line: "+prefixToken.getLine());
           }
          }
 
@@ -148,7 +147,7 @@ public class SubnetModifier extends Modifier<SubnetModification>{
           Integer replacement = mutate(subnetBits);
           if (replacement != null){
             rewriter.replace(ipToken.getTokenIndex(), Prefix.create(ip,replacement).toString());
-            System.out.println("subnet change (prefix, no mask) at configuration "+SubnetModification.getHost()+" line: "+ipToken.getLine());
+            System.out.println("subnet change (prefix, no mask) at configuration "+hostname+" line: "+ipToken.getLine());
           }
         }
 

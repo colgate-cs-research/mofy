@@ -14,13 +14,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
-public class IpModifier extends Modifier<IpModification>{
+public class IpModifier extends Modifier<Modification>{
 
     private TokenStreamRewriter rewriter;
 
     /** Current ACL Modification to be applied */
-    private IpModification IpModification;
-
+    private Modification IpModification;
+    private static String hostname;
     private int percentage;
     private long seed;
     private static Random generator;
@@ -46,9 +46,9 @@ public class IpModifier extends Modifier<IpModification>{
      * Add ACL (specified by param) into chosen config.
      * @param modification Modification needs to be made.
      */
-    public void modify(IpModification Modification){
+    public void modify(Modification Modification, String host){
         this.IpModification = Modification;
-        String hostname = IpModification.getHost();
+        String hostname = host;
         if (!hostToConfigMap.containsKey(hostname)){
             System.out.printf("Host %s : NOT FOUND!", hostname);
             return;
@@ -84,10 +84,10 @@ public class IpModifier extends Modifier<IpModification>{
 
     static class IpWalkListener extends  CiscoParserBaseListener{
 
-        IpModification IpModification;
+        Modification IpModification;
         TokenStreamRewriter rewriter;
 
-        IpWalkListener(IpModification IpModification,
+        IpWalkListener(Modification IpModification,
                                TokenStreamRewriter rewriter) {
             this.IpModification = IpModification;
             this.rewriter = rewriter;
@@ -100,7 +100,7 @@ public class IpModifier extends Modifier<IpModification>{
           if (replacement != null){
             rewriter.replace(ipToken.getTokenIndex(),
                 replacement);
-            System.out.println("Ip change (ip) at configuration "+IpModification.getHost()+" line: "+ipToken.getLine());
+            System.out.println("Ip change (ip) at configuration "+hostname+" line: "+ipToken.getLine());
           }
         }
 
@@ -111,12 +111,11 @@ public class IpModifier extends Modifier<IpModification>{
           if (replacement != null){
             rewriter.replace(prefixToken.getTokenIndex(),
                 Prefix.create(Ip.parse(replacement), prefix.getNetworkBits()).toString());
-            System.out.println("Ip change (prefix) at configuration "+IpModification.getHost()+" line: "+prefixToken.getLine());
+            System.out.println("Ip change (prefix) at configuration "+hostname+" line: "+prefixToken.getLine());
           }
         }
 
         private String mutate(String IpString){
-          System.out.println(IpModification.getPercent());
           String[] addrArray = IpString.split("\\.");
           Double num = generator.nextDouble()*100;
           int check = generator.nextInt(4);
