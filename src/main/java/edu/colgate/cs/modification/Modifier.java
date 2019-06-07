@@ -8,27 +8,40 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import edu.colgate.cs.modification.*;
+import org.antlr.v4.runtime.*;
+import org.antlr.v4.runtime.tree.ParseTreeWalker;
+import org.batfish.grammar.cisco.CiscoCombinedParser;
+
+import org.batfish.datamodel.InterfaceAddress;
+import org.batfish.datamodel.Ip;
+import org.batfish.grammar.cisco.CiscoParserBaseListener;
+import org.batfish.grammar.cisco.CiscoParser.*;
+
 
 /**
  * A network Configuration modifier.
  */
-public abstract class Modifier<E extends ModifierSetting> {
-
-    protected Map<String, Config> hostToConfigMap;
+public class Modifier {
 
     /** How many times has a config been modified with ACLModifier? */
-    protected Map<String, Integer> ModifierSettingHistoryMap;
 
-    protected static Random generator;
+    private TokenStreamRewriter rewriter;
 
-    protected Modifier(List<Config> configs, Settings setting){
-        hostToConfigMap = new HashMap<>();
-        ModifierSettingHistoryMap = new HashMap<>();
-        for (Config config: configs){
-            hostToConfigMap.put(config.getHostname(), config);
-            ModifierSettingHistoryMap.put(config.getHostname(), 0);
-        }
+    private int percentage;
+
+    private long seed;
+
+    private Settings.modtype mod;
+
+    private static Random generator;
+
+    public Modifier(List<Config> configs, Settings setting){
         generator = new Random(setting.getSeed());
+        this.percentage = setting.getPercent();
+        this.seed = setting.getSeed();
+        this.mod = setting.getmod();
+        this.generator = new Random(this.seed);
     }
 
     /**
@@ -36,32 +49,48 @@ public abstract class Modifier<E extends ModifierSetting> {
      * with any ModifierSettings applied.
      * @param outputDir Path to directory where modified configs are to be stored.
      */
-    public void generateModifiedConfigs(String outputDir){
+    public void generateModifiedConfigs(String outputDir, Config config){
         try {
             File output = new File(outputDir);
             if (!output.exists()) {
                 output.mkdir();
             }
-            for (String host: hostToConfigMap.keySet()){
-                FileUtils.writeStringToFile(new File(output, String.format("%s",host)),
-                        hostToConfigMap.get(host).getText());
-            }
+            FileUtils.writeStringToFile(new File(output, String.format("%s",config.getHostname())),
+                    config.getText());
+            // for (String host: hostToConfigMap.keySet()){
+            //     FileUtils.writeStringToFile(new File(output, String.format("%s",host)),
+            //             hostToConfigMap.get(host).getText());
+            // }
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
     /**
-     * Construct a config object containing ACL ModifierSettings made.
-     * @return Modified Config Object
-     */
-    public Config getModifiedConfig(String hostname){
-        return hostToConfigMap.get(hostname);
-    }
-
-    /**
      * Perform given ModifierSetting.
      */
-    public abstract void modify(ModifierSetting ModifierSetting, String hostname);
+    public Config modify(Config config){
+      ListTokenSource tokenSource = new ListTokenSource(config.getTokens());
+      CommonTokenStream commonTokenStream = new CommonTokenStream(tokenSource);
+      commonTokenStream.fill();
+      rewriter = new TokenStreamRewriter(commonTokenStream);
+      ParseTreeWalker walker = new ParseTreeWalker();
+      switch(this.mod){
+        case Permit:
+          PermitWalkListener Permitlistener = new PermitWalkListener(generator,percentage,config,rewriter);
+          walker.walk(Permitlistener,config.getParseTree());
+          break;
+        case Subnet:
+          SubnetWalkListener Subnetlistener = new SubnetWalkListener(generator,percentage,config,rewriter);
+          walker.walk(Subnetlistener,config.getParseTree());
+          break;
+        case Ip:
+          IpWalkListener Iplistener = new IpWalkListener(generator,percentage,config,rewriter);
+          walker.walk(Iplistener,config.getParseTree());
+          break;
+      }
+      Config newconfig = new Config(rewriter.getText(),config.getHostname());
+      return newconfig;
+    }
 
 }

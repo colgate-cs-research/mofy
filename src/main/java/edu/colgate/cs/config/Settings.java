@@ -57,25 +57,8 @@ public class Settings {
         modifications = line.getOptionValue(Mofychoice);
         percent = Integer.parseInt(line.getOptionValue(PERCENT));
         seed = Integer.parseInt(line.getOptionValue(SEED));
+        mod = modtype.valueOf(modifications);
 
-
-        switch(modifications){
-          case "Permit":
-            mod = modtype.valueOf(modifications);
-            break;
-          case "Subnet":
-            mod = modtype.valueOf(modifications);
-            break;
-          case "Ip":
-            mod = modtype.valueOf(modifications);
-            break;
-          case "Swap":
-            mod = modtype.valueOf(modifications);
-            break;
-          default:
-            System.out.println("invalid modification type");
-            break;
-        }
 
     }
 

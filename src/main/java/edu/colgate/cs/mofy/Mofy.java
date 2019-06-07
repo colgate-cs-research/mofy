@@ -1,13 +1,7 @@
 package edu.colgate.cs.mofy;
 
 import edu.colgate.cs.config.Settings;
-import edu.colgate.cs.modification.ModifierSetting;
-import edu.colgate.cs.modification.Modifier;
-import edu.colgate.cs.modification.IpModifier;
-import edu.colgate.cs.modification.PermitModifier;
-import edu.colgate.cs.modification.SubnetModifier;
-import edu.colgate.cs.modification.SwapModifier;
-import edu.colgate.cs.modification.Config;
+import edu.colgate.cs.modification.*;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.collections4.list.TreeList;
 import org.batfish.datamodel.*;
@@ -32,19 +26,6 @@ public class Mofy{
     private List<Config> configs;
     private int percentage;
     private long seed;
-
-    private PermitModifier permitmodifier;
-
-    private SubnetModifier subnetmodifier;
-
-    private SwapModifier swapmodifier;
-
-    private IpModifier ipmodifier;
-
-    private Modifier modifier;
-
-    private ModifierSetting ModifierSetting;
-
     private Settings.modtype mod;
 
 
@@ -59,6 +40,7 @@ public class Mofy{
 
 
     public void run(){
+
         try {
             configPaths =listConfigFiles(Paths.get(settings.getConfigsDirectory()));
         }catch(Exception e){
@@ -79,41 +61,33 @@ public class Mofy{
         this.percentage = settings.getPercent();
         this.seed = settings.getSeed();
         this.mod = settings.getmod();
-        this.ModifierSetting = new ModifierSetting (this.percentage, this.seed);
+        SwapModifier swapmodifier;
+        Modifier modifier;
+        Config newconfig;
 
         switch(this.mod){
-          case Permit:
-            this.modifier = new PermitModifier(configs,settings);
-            break;
-          case Subnet:
-            this.modifier = new SubnetModifier(configs,settings);
-            break;
-          case Ip:
-            this.modifier = new IpModifier(configs,settings);
-            break;
           case Swap:
-            this.modifier = new SwapModifier(configs,settings);
+            swapmodifier = new SwapModifier(configs,settings);
+            for (Config config: configs){
+              newconfig = swapmodifier.modify(config);
+              if (settings.getOutputDirectory()!=null){
+                  System.out.printf("Generating modified configs in : %s\n", settings.getOutputDirectory());
+                  swapmodifier.generateModifiedConfigs(settings.getOutputDirectory(),newconfig);
+              }
+            }
             break;
           default:
-            System.out.println("invalid Modification type");
+            modifier = new Modifier(configs,settings);
+            for (Config config: configs){
+              newconfig = modifier.modify(config);
+              if (settings.getOutputDirectory()!=null){
+                  System.out.printf("Generating modified configs in : %s\n", settings.getOutputDirectory());
+                  modifier.generateModifiedConfigs(settings.getOutputDirectory(),newconfig);
+              }
+            }
             break;
         }
-
-          HashSet<String> hostnames = new HashSet<String>();
-
-          Configuration genericConfiguration;
-          for (Config config: configs){
-            hostnames.add(config.getHostname());
-          }
-
-        for (String host: hostnames){
-          modifier.modify(ModifierSetting, host);
-        }
-        if (settings.getOutputDirectory()!=null){
-            System.out.printf("Generating modified configs in : %s\n", settings.getOutputDirectory());
-            this.modifier.generateModifiedConfigs(settings.getOutputDirectory());
-        }
-    }
+      }
 
 
 

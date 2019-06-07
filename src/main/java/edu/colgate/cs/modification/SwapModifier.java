@@ -26,16 +26,20 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.ArrayList;
+import org.apache.commons.io.FileUtils;
+import edu.colgate.cs.config.Settings;
+import java.io.File;
+import java.io.IOException;
 
-public class SwapModifier extends Modifier<ModifierSetting>{
+public class SwapModifier{
 
     private TokenStreamRewriter rewriter;
 
     /** Current ACL ModifierSetting to be applied */
-    private ModifierSetting SwapModifierSetting;
-    private static String hostname;
-    private int percentage;
+    private int percent;
     private long seed;
+    private Random generator;
+    private String hostname;
     private static ArrayList<Standard_access_list_tailContext> all_list;
     private static ArrayList<Extended_access_list_tailContext> all_list1;
     private static int count_standard;
@@ -47,57 +51,56 @@ public class SwapModifier extends Modifier<ModifierSetting>{
      * @param configs List of Configs for the network to be modified.
      */
     public SwapModifier(List<Config> configs, Settings setting){
-        super(configs, setting);
+      generator = new Random(setting.getSeed());
+      this.percent = setting.getPercent();
+      this.seed = setting.getSeed();
+      this.generator = new Random(this.seed);
     }
 
     /**
      * Add ACL (specified by param) into chosen config.
      * @param ModifierSetting ModifierSetting needs to be made.
      */
-    public void modify(ModifierSetting ModifierSetting, String host){
+    public Config modify(Config config){
         this.all_list = new ArrayList<Standard_access_list_tailContext>();
         this.all_list1 = new ArrayList<Extended_access_list_tailContext>();
-        this.SwapModifierSetting = ModifierSetting;
-        this.hostname = host;
-        if (!hostToConfigMap.containsKey(hostname)){
-            System.out.printf("Host %s : NOT FOUND!", hostname);
-            return;
-        }
-        this.percentage = SwapModifierSetting.getPercent();
-        this.seed =  SwapModifierSetting.getSeed();
         this.count_standard = 0;
         this.count_extended = 0;
-        Config config = hostToConfigMap.get(hostname);
-
+        this.hostname = config.getHostname();
         ListTokenSource tokenSource = new ListTokenSource(config.getTokens());
         CommonTokenStream commonTokenStream = new CommonTokenStream(tokenSource);
         commonTokenStream.fill();
         rewriter = new TokenStreamRewriter(commonTokenStream);
-        SwapWalkListener listener = new SwapWalkListener(SwapModifierSetting, rewriter);
+        SwapWalkListener listener = new SwapWalkListener(rewriter);
         ParseTreeWalker walker = new ParseTreeWalker();
         walker.walk(listener,config.getParseTree());
         changelist();
-        ChangeWalkerListener listener1 = new ChangeWalkerListener(SwapModifierSetting, rewriter);
+        ChangeWalkerListener listener1 = new ChangeWalkerListener(generator,percent,rewriter);
         walker.walk(listener1,config.getParseTree());
-        updateConfigMap(hostname);
-        //Test Printout
-        //System.out.println(rewriter.getText());
-        // System.out.println("test out:");
-        // for (int i = 0; i < all_list1.size(); i++){
-        //   System.out.println(all_list1.get(i));
-        // }
+        Config newconfig = new Config(rewriter.getText(),config.getHostname());
+        return newconfig;
     }
 
     /**
-     * Updates the hostnameToConfigMap with modified config.
-     * @param hostname Hostname for config to be updated in the map.
+     * Generate .cfg files for each host in the network,
+     * with any ModifierSettings applied.
+     * @param outputDir Path to directory where modified configs are to be stored.
      */
-    private void updateConfigMap(String hostname){
-        Config config = new Config(rewriter.getText(),
-                hostname);
-        hostToConfigMap.put(hostname, config);
-        ModifierSettingHistoryMap.put(hostname,
-                ModifierSettingHistoryMap.get(hostname)+1);
+    public void generateModifiedConfigs(String outputDir, Config config){
+        try {
+            File output = new File(outputDir);
+            if (!output.exists()) {
+                output.mkdir();
+            }
+            FileUtils.writeStringToFile(new File(output, String.format("%s",config.getHostname())),
+                    config.getText());
+            // for (String host: hostToConfigMap.keySet()){
+            //     FileUtils.writeStringToFile(new File(output, String.format("%s",host)),
+            //             hostToConfigMap.get(host).getText());
+            // }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void changelist(){
@@ -106,7 +109,7 @@ public class SwapModifier extends Modifier<ModifierSetting>{
         for (int j = i+1; j < all_list.size(); j++){
           if (overlap(all_list.get(i),all_list.get(j))&&(!check.contains(all_list.get(i).ala.getStart().getLine()))&&(!check.contains(all_list.get(j).ala.getStart().getLine()))){
             Double num = generator.nextDouble()*100;
-            if (num>(100-SwapModifierSetting.getPercent())){
+            if (num>(100- percent)){
               Standard_access_list_tailContext temp = all_list.get(i);
               System.out.println("swap change(Standard) at configuration "+hostname+" line: "+all_list.get(i).ala.getStart().getLine());
               check.add(all_list.get(i).ala.getStart().getLine());
@@ -124,7 +127,7 @@ public class SwapModifier extends Modifier<ModifierSetting>{
         for (int j = i+1; j < all_list1.size(); j++){
           if (overlap(all_list1.get(i),all_list1.get(j))&&(!check.contains(all_list1.get(i).ala.getStart().getLine()))&&(!check.contains(all_list1.get(j).ala.getStart().getLine()))){
             Double num = generator.nextDouble()*100;
-            if (num>(100-SwapModifierSetting.getPercent())){
+            if (num>(100-percent)){
               Extended_access_list_tailContext temp = all_list1.get(i);
               System.out.println("swap change(Extended) at configuration "+hostname+" line: "+all_list1.get(i).ala.getStart().getLine());
               check.add(all_list1.get(i).ala.getStart().getLine());
@@ -191,12 +194,9 @@ public class SwapModifier extends Modifier<ModifierSetting>{
 
     static class SwapWalkListener extends  CiscoParserBaseListener{
 
-        ModifierSetting SwapModifierSetting;
         TokenStreamRewriter rewriter;
 
-        SwapWalkListener(ModifierSetting SwapModifierSetting,
-                               TokenStreamRewriter rewriter) {
-            this.SwapModifierSetting = SwapModifierSetting;
+        SwapWalkListener(TokenStreamRewriter rewriter) {
             this.rewriter = rewriter;
         }
 
@@ -211,11 +211,9 @@ public class SwapModifier extends Modifier<ModifierSetting>{
         }
       }
     static class ChangeWalkerListener extends CiscoParserBaseListener{
-      ModifierSetting SwapModifierSetting;
       TokenStreamRewriter rewriter;
-      ChangeWalkerListener(ModifierSetting SwapModifierSetting,
+      ChangeWalkerListener(Random generator, int percent,
                               TokenStreamRewriter rewriter){
-            this.SwapModifierSetting = SwapModifierSetting;
             this.rewriter = rewriter;
           }
         @Override
