@@ -20,7 +20,7 @@ while read TEST_NAME; do
     TEST_COUNT=$((TEST_COUNT+1))
     TEST_DIR="$TEST_ROOT/cases/$TEST_NAME"
 
-    $TEST_DIR/run.sh
+    bash "$TEST_DIR/run.sh"
     RESULT=$?
 
     if [ $RESULT -eq $TEST_PASS ]; then
@@ -29,7 +29,9 @@ while read TEST_NAME; do
     else
         print_log_line "$RED FAIL $NORMAL"
     fi
-done <<<$(ls $TEST_ROOT/cases/)
+done << EOF 
+$(ls "$TEST_ROOT/cases/")
+EOF
 
 if  [ $PASS_COUNT -eq $TEST_COUNT ]; then
     echo $GREEN
