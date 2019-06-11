@@ -16,6 +16,7 @@ public class Settings {
     private static final String Mofychoice = "Modification";
     private static final String PERCENT = "Percentage";
     private static final String SEED = "seed";
+    private static final String INTERFACE = "Interface";
 
     /** Where are the configuration files stored? */
     private String configsDirectory;
@@ -33,6 +34,8 @@ public class Settings {
     private long seed;
 
     private String modifications;
+
+    private boolean ifchange = false;
 
     private modtype mod;
 
@@ -58,8 +61,14 @@ public class Settings {
         percent = Integer.parseInt(line.getOptionValue(PERCENT));
         seed = Integer.parseInt(line.getOptionValue(SEED));
         mod = modtype.valueOf(modifications);
-
-
+        if (line.hasOption(INTERFACE)){
+          ifchange = true;
+          System.out.println("Enable interface changes");
+        }
+        else {
+          System.out.println("Disable interface changes");
+          ifchange = false;
+        }
     }
 
 
@@ -100,6 +109,11 @@ public class Settings {
         option.setRequired(true);
         options.addOption(option);
 
+        option = new Option(INTERFACE, false, "Enable change of interface");
+        option.setArgName("Interface");
+        option.setRequired(false);
+        options.addOption(option);
+
         return options;
     }
 
@@ -130,5 +144,9 @@ public class Settings {
 
     public long getSeed(){
       return seed;
+    }
+
+    public boolean getifchange(){
+      return ifchange;
     }
 }

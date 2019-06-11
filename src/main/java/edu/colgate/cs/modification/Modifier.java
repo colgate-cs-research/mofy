@@ -36,11 +36,14 @@ public class Modifier {
 
     private static Random generator;
 
+    private boolean ifchange;
+
     public Modifier(List<Config> configs, Settings setting){
         generator = new Random(setting.getSeed());
         this.percentage = setting.getPercent();
         this.seed = setting.getSeed();
         this.mod = setting.getmod();
+        this.ifchange = setting.getifchange();
         this.generator = new Random(this.seed);
     }
 
@@ -85,7 +88,7 @@ public class Modifier {
           walker.walk(Subnetlistener,config.getParseTree());
           break;
         case Ip:
-          IpWalkListener Iplistener = new IpWalkListener(generator,percentage,config,rewriter);
+          IpWalkListener Iplistener = new IpWalkListener(ifchange,generator,percentage,config,rewriter);
           walker.walk(Iplistener,config.getParseTree());
           break;
       }
