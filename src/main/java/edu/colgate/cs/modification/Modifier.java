@@ -84,7 +84,7 @@ public class Modifier {
           walker.walk(Permitlistener,config.getParseTree());
           break;
         case Subnet:
-          SubnetWalkListener Subnetlistener = new SubnetWalkListener(generator,percentage,config,rewriter);
+          SubnetWalkListener Subnetlistener = new SubnetWalkListener(ifchange,generator,percentage,config,rewriter);
           walker.walk(Subnetlistener,config.getParseTree());
           break;
         case Ip:

@@ -69,44 +69,44 @@ public class IpWalkListener extends  CiscoParserBaseListener{
       return null;
     }
 
-    // @Override
-    // public void exitAccess_list_ip_range(Access_list_ip_rangeContext ctx) {
-    //   if (ctx.ip != null) {
-    //       mutateIp(ctx.ip);
-    //   } else if (ctx.prefix != null) {
-    //       mutatePrefix(ctx.prefix);
-    //   }
-    // }
-    //
-    // @Override
-    // public void exitIf_ip_address(If_ip_addressContext ctx) {
-    //   if (this.ifchange){
-    //     if (ctx.ip != null) {
-    //       mutateIp(ctx.ip);
-    //     } else if (ctx.prefix != null) {
-    //       mutatePrefix(ctx.prefix);
-    //     }
-    //   }
-    // }
-    //
-    // @Override
-    // public void exitRo_network(Ro_networkContext ctx) {
-    //   if (ctx.ip != null) {
-    //     mutateIp(ctx.ip);
-    //   } else if (ctx.prefix != null) {
-    //     mutatePrefix(ctx.prefix);
-    //   }
-    // }
+    @Override
+    public void exitAccess_list_ip_range(Access_list_ip_rangeContext ctx) {
+      if (ctx.ip != null) {
+          mutateIp(ctx.ip);
+      } else if (ctx.prefix != null) {
+          mutatePrefix(ctx.prefix);
+      }
+    }
 
-    // @Override
-    // public void exitNetwork_bgp_tail(Network_bgp_tailContext ctx) {
-    //   if (ctx.ip!= null ){
-    //     mutateIp(ctx.ip);
-    //   }
-    //   else if (ctx.prefix != null) {
-    //     mutatePrefix(ctx.prefix);
-    //   }
-    // }
+    @Override
+    public void exitIf_ip_address(If_ip_addressContext ctx) {
+      if (this.ifchange){
+        if (ctx.ip != null) {
+          mutateIp(ctx.ip);
+        } else if (ctx.prefix != null) {
+          mutatePrefix(ctx.prefix);
+        }
+      }
+    }
+
+    @Override
+    public void exitRo_network(Ro_networkContext ctx) {
+      if (ctx.ip != null) {
+        mutateIp(ctx.ip);
+      } else if (ctx.prefix != null) {
+        mutatePrefix(ctx.prefix);
+      }
+    }
+
+    @Override
+    public void exitNetwork_bgp_tail(Network_bgp_tailContext ctx) {
+      if (ctx.ip!= null ){
+        mutateIp(ctx.ip);
+      }
+      else if (ctx.prefix != null) {
+        mutatePrefix(ctx.prefix);
+      }
+    }
 
     @Override
     public void exitRs_route(Rs_routeContext ctx) {

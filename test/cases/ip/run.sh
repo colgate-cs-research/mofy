@@ -6,5 +6,5 @@ source "$TEST_ROOT/common.sh"
 TMP_DIR="$(mktemp -d)"
 
 mofy_run -configs $TEST_DIR/configs -outputDir $TMP_DIR \
-    -Modification Ip -Percentage 100 -seed 1
+    -Modification Ip -Percentage 100 -seed 1 -Interface
 diff -r $TEST_DIR/expected $TMP_DIR

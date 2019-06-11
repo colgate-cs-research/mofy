@@ -31,13 +31,15 @@ public class SubnetWalkListener extends  CiscoParserBaseListener{
     int percent;
     Random generator;
     Config config;
+    boolean ifchange;
 
-    public SubnetWalkListener(Random generator, int percent, Config config,
+    public SubnetWalkListener(boolean ifchange, Random generator, int percent, Config config,
                            TokenStreamRewriter rewriter) {
         this.rewriter = rewriter;
         this.config = config;
         this.percent = percent;
         this.generator = generator;
+        this.ifchange = ifchange;
     }
 
     private void mutateSubnet(Token ipToken, Token subnetMaskToken) {
@@ -116,10 +118,12 @@ public class SubnetWalkListener extends  CiscoParserBaseListener{
 
     @Override
     public void exitIf_ip_address(If_ip_addressContext ctx) {
-      if (ctx.subnet != null) {
-        mutateSubnet(ctx.ip, ctx.subnet);
-      } else if (ctx.prefix != null) {
-        mutatePrefix(ctx.prefix);
+      if (ifchange){
+        if (ctx.subnet != null) {
+          mutateSubnet(ctx.ip, ctx.subnet);
+        } else if (ctx.prefix != null) {
+          mutatePrefix(ctx.prefix);
+        }
       }
     }
 
