@@ -29,6 +29,6 @@ router ospf 1
 !
 router static
  address-family ipv4 unicast
-  0.0.0.2/32 2.0.0.2
+  3.0.0.2/32 0.0.0.2
 !
 end

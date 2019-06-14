@@ -5,9 +5,9 @@ hostname C
 !
 ip access-list extended aruba-mgmt
  permit ip 10.41.0.0 0.0.0.255 any
- permit tcp host 149.43.13.46 10.41.2.0 0.0.0.255 eq 22
- deny tcp host 14.43.132.200 10.4.2.0 0.0.255.255 eq 22
- permit tcp host 14.43.132.201 1.41.2.0 0.0.0.255 eq 22
+ permit tcp host 149.43.13.46 10.41.0.1 0.0.0.255 eq 22
+ deny tcp host 149.43.132.20 1.41.2.0 0.0.255.255 eq 22
+ permit tcp host 149.4.132.201 1.41.2.0 0.0.0.255 eq 22
 !
 interface GigabitEthernet0/1
     description INFRA:B:Gi0/1
@@ -20,7 +20,7 @@ interface GigabitEthernet0/2
     ip ospf cost 3
 !
 interface GigabitEthernet0/3
-    ip address 13.0.0.3 255.0.0.0
+    ip address 1.0.2.3 255.0.0.0
 !
 router bgp 11
     network 11.0.0.0/8
@@ -28,7 +28,7 @@ router bgp 11
     neighbor 3.0.3.1 remote-as 12
 !
   address-family ipv4
-  network 14.43.0.0
+  network 149.4.0.0
   exit-address-family
 !
 end
