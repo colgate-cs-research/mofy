@@ -14,8 +14,7 @@ import org.batfish.datamodel.IpWildcard;
 import org.batfish.datamodel.Prefix;
 import org.batfish.grammar.cisco.CiscoCombinedParser;
 
-import org.batfish.datamodel.InterfaceAddress;
-import org.batfish.datamodel.Ip;
+import org.batfish.datamodel.*;
 import org.batfish.grammar.cisco.CiscoParserBaseListener;
 import org.batfish.grammar.cisco.CiscoParser.*;
 import org.batfish.representation.cisco.AccessListAddressSpecifier;
@@ -70,7 +69,7 @@ public class SubnetWalkListener extends  CiscoParserBaseListener{
 
     private void mutatePrefix(Token prefixToken) {
       //System.out.println("3 "+ prefix.getText());
-      InterfaceAddress prefix = new InterfaceAddress(prefixToken.getText());
+      ConcreteInterfaceAddress prefix = ConcreteInterfaceAddress.parse(prefixToken.getText());
       Ip ip = prefix.getIp();
       int subnetBits = prefix.getNetworkBits();
       Integer replacement = mutate(subnetBits);

@@ -3,10 +3,7 @@ package edu.colgate.cs.modification;
 import edu.colgate.cs.config.Settings;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
-
-import org.batfish.datamodel.InterfaceAddress;
-import org.batfish.datamodel.Ip;
-import org.batfish.datamodel.Prefix;
+import org.batfish.datamodel.*;
 import org.batfish.grammar.cisco.CiscoParserBaseListener;
 import org.batfish.grammar.cisco.CiscoParser.*;
 
@@ -42,7 +39,7 @@ public class IpWalkListener extends  CiscoParserBaseListener{
     }
 
     private void mutatePrefix(Token prefixToken){
-      InterfaceAddress prefix = new InterfaceAddress(prefixToken.getText());
+      ConcreteInterfaceAddress prefix = ConcreteInterfaceAddress.parse(prefixToken.getText());
       String ip = prefix.getIp().toString();
       String replacement = mutate(ip);
       if (replacement != null){
@@ -110,9 +107,9 @@ public class IpWalkListener extends  CiscoParserBaseListener{
 
     @Override
     public void exitRs_route(Rs_routeContext ctx) {
-      if (ctx.prefix !=null ){
-        mutatePrefix(ctx.prefix);
-      }
+      // if (ctx.prefix !=null ){
+      //   mutatePrefix(ctx.prefix);
+      // }
       if (ctx.nhip != null){
         mutateIp(ctx.nhip);
       }

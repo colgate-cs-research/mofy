@@ -62,8 +62,8 @@ public class Config {
                     batfishSettings.getLogLevel(),
                     batfishSettings.getTimestamp(), System.out));
 
-            batfishSettings.setDisableUnrecognized(true);
-            batfishWarnings = new Warnings(true, true, false);
+            batfishSettings.setDisableUnrecognized(false);
+            batfishWarnings = new Warnings(false, false, false);
         }
 
         switch(this.format){

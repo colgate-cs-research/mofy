@@ -142,12 +142,14 @@ public class SwapModifier{
     }
   }
     private boolean overlap(Access_list_ip_rangeContext ipr1, Access_list_ip_rangeContext ipr2){
+      int subnet_1 = 0;
+      int subnet_2 = 0;
+      int common = 0;
       if (ipr1.prefix != null && ipr2.prefix !=null){
       Prefix Prefix1 = Prefix.parse(ipr1.prefix.getText());
       Prefix Prefix2 = Prefix.parse(ipr2.prefix.getText());
-      int subnet_1 = Prefix1.getPrefixLength();
-      int subnet_2 = Prefix2.getPrefixLength();
-      int common;
+      subnet_1 = Prefix1.getPrefixLength();
+      subnet_2 = Prefix2.getPrefixLength();
       if (subnet_1>subnet_2){
         common = subnet_2;
       }
@@ -164,9 +166,14 @@ public class SwapModifier{
     if (ipr1.wildcard != null && ipr2.wildcard !=null){
     IpWildcard card_1 = IpWildcard.ipWithWildcardMask(Ip.parse(ipr1.ip.getText()), Ip.parse(ipr1.wildcard.getText()));
     IpWildcard card_2 = IpWildcard.ipWithWildcardMask(Ip.parse(ipr2.ip.getText()), Ip.parse(ipr2.wildcard.getText()));
-    int subnet_1 = card_1.toPrefix().getPrefixLength();
-    int subnet_2 = card_2.toPrefix().getPrefixLength();
-    int common;
+    try{
+      subnet_1 = card_1.toPrefix().getPrefixLength();
+      subnet_2 = card_2.toPrefix().getPrefixLength();}
+    catch(IllegalStateException e){
+      System.out.println("Illegal wildcard");
+      return false;
+    }
+    common = 0;
     if (subnet_1>subnet_2){
       common = subnet_2;
     }
