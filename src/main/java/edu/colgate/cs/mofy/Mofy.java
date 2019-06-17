@@ -101,6 +101,7 @@ public class Mofy{
             }
         });
         List<Path> cfgPaths = new ArrayList<>();
+        Arrays.sort(cfgFiles);
         for (File cfgFile: cfgFiles){
             cfgPaths.add(cfgFile.toPath());
         }
