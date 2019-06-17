@@ -86,14 +86,20 @@ public class SwapModifier{
      * with any ModifierSettings applied.
      * @param outputDir Path to directory where modified configs are to be stored.
      */
-    public void generateModifiedConfigs(String outputDir, Config config){
+    public void generateModifiedConfigs(String outputDir, Config config, boolean _cfg){
         try {
             File output = new File(outputDir);
             if (!output.exists()) {
                 output.mkdir();
             }
-            FileUtils.writeStringToFile(new File(output, String.format("%s",config.getHostname())),
-                    config.getText());
+            if (_cfg){
+              FileUtils.writeStringToFile(new File(output, String.format("%s.cfg",config.getHostname())),
+                      config.getText());
+            }
+            else{
+              FileUtils.writeStringToFile(new File(output, String.format("%s",config.getHostname())),
+                      config.getText());
+                  }
             // for (String host: hostToConfigMap.keySet()){
             //     FileUtils.writeStringToFile(new File(output, String.format("%s",host)),
             //             hostToConfigMap.get(host).getText());

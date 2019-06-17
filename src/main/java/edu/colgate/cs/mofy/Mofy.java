@@ -26,6 +26,7 @@ public class Mofy{
     private List<Config> configs;
     private int percentage;
     private long seed;
+    private boolean _cfg = false;
     private Settings.modtype mod;
 
 
@@ -48,8 +49,8 @@ public class Mofy{
         }
 
         for (Path cfgFilePath: configPaths){
-            // if (!cfgFilePath.toString().endsWith("cfg"))
-            //     continue;
+            if (cfgFilePath.toString().endsWith("cfg"))
+                _cfg = true;
             File file = new File(cfgFilePath.toString());
 
             try {
@@ -72,7 +73,7 @@ public class Mofy{
               newconfig = swapmodifier.modify(config);
               if (settings.getOutputDirectory()!=null){
                   System.out.printf("Generating modified configs in : %s\n", settings.getOutputDirectory());
-                  swapmodifier.generateModifiedConfigs(settings.getOutputDirectory(),newconfig);
+                  swapmodifier.generateModifiedConfigs(settings.getOutputDirectory(), newconfig, _cfg);
               }
             }
             break;
@@ -82,7 +83,7 @@ public class Mofy{
               newconfig = modifier.modify(config);
               if (settings.getOutputDirectory()!=null){
                   System.out.printf("Generating modified configs in : %s\n", settings.getOutputDirectory());
-                  modifier.generateModifiedConfigs(settings.getOutputDirectory(),newconfig);
+                  modifier.generateModifiedConfigs(settings.getOutputDirectory(), newconfig, _cfg);
               }
             }
             break;
