@@ -38,12 +38,15 @@ public class Modifier {
 
     private boolean ifchange;
 
+    private boolean largescale;
+
     public Modifier(List<Config> configs, Settings setting){
         generator = new Random(setting.getSeed());
         this.percentage = setting.getPercent();
         this.seed = setting.getSeed();
         this.mod = setting.getmod();
         this.ifchange = setting.getifchange();
+        this.largescale = setting.getscale();
         this.generator = new Random(this.seed);
     }
 
@@ -90,7 +93,7 @@ public class Modifier {
           walker.walk(Permitlistener,config.getParseTree());
           break;
         case Subnet:
-          SubnetWalkListener Subnetlistener = new SubnetWalkListener(ifchange,generator,percentage,config,rewriter);
+          SubnetWalkListener Subnetlistener = new SubnetWalkListener(largescale,ifchange,generator,percentage,config,rewriter);
           walker.walk(Subnetlistener,config.getParseTree());
           break;
         case Ip:

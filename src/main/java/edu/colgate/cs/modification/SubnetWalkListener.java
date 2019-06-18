@@ -31,14 +31,16 @@ public class SubnetWalkListener extends  CiscoParserBaseListener{
     Random generator;
     Config config;
     boolean ifchange;
+    boolean largescale;
 
-    public SubnetWalkListener(boolean ifchange, Random generator, int percent, Config config,
+    public SubnetWalkListener(boolean largescale, boolean ifchange, Random generator, int percent, Config config,
                            TokenStreamRewriter rewriter) {
         this.rewriter = rewriter;
         this.config = config;
         this.percent = percent;
         this.generator = generator;
         this.ifchange = ifchange;
+        this.largescale = largescale;
     }
 
     private void mutateSubnet(Token ipToken, Token subnetMaskToken) {
@@ -93,11 +95,20 @@ public class SubnetWalkListener extends  CiscoParserBaseListener{
       Double num = generator.nextDouble()*100;
       int check = generator.nextInt(2);
       if (num<this.percent){
-        if (orig == 32){
+        if (orig == 32 && !largescale){
           orig --;
         }
-        else {
+        else if (orig >24 && largescale){
+          orig = 32;
+        }
+        else if (orig == 32 && largescale){
+          orig = orig - 8;
+        }
+        else if (!largescale){
           orig ++;
+        }
+        else if (largescale){
+          orig = orig + 8;
         }
         return orig;
       }

@@ -17,6 +17,7 @@ public class Settings {
     private static final String PERCENT = "Percentage";
     private static final String SEED = "seed";
     private static final String INTERFACE = "Interface";
+    private static final String LARGE = "Largescale";
 
     /** Where are the configuration files stored? */
     private String configsDirectory;
@@ -36,6 +37,8 @@ public class Settings {
     private String modifications;
 
     private boolean ifchange = false;
+
+    private boolean largescale = false;
 
     private modtype mod;
 
@@ -66,8 +69,14 @@ public class Settings {
           System.out.println("Enable interface changes");
         }
         else {
-          System.out.println("Disable interface changes");
           ifchange = false;
+        }
+        if (line.hasOption(LARGE)){
+          largescale = true;
+          System.out.println("Enable largescale subnet change");
+        }
+        else{
+          largescale = false;
         }
     }
 
@@ -114,6 +123,11 @@ public class Settings {
         option.setRequired(false);
         options.addOption(option);
 
+        option = new Option(LARGE, false, "Enable largescale change of subnet");
+        option.setArgName("Largescale");
+        option.setRequired(false);
+        options.addOption(option);
+
         return options;
     }
 
@@ -148,5 +162,9 @@ public class Settings {
 
     public boolean getifchange(){
       return ifchange;
+    }
+
+    public boolean getscale(){
+      return largescale;
     }
 }
