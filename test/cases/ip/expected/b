@@ -13,11 +13,13 @@ interface GigabitEthernet0/1
     description INFRA:C:Gi0/1
     ip address 1.0.0.0/16
     ip ospf cost 1
+    ip access-group 1 in
 !
 interface GigabitEthernet0/2
     description INFRA:D:Gi0/1
     ip address 0.0.0.0/16
     ip ospf cost 1
+    ip access-group 2 out
 !
 interface GigabitEthernet0/3
     ip address 11.0.1.0 255.0.0.0
@@ -29,6 +31,6 @@ router ospf 1
 !
 router static
  address-family ipv4 unicast
-  3.0.0.2/32 0.0.0.2
+  20.0.0.2/32 1.0.0.2
 !
 end
