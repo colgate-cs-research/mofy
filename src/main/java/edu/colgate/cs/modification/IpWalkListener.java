@@ -1,51 +1,41 @@
 package edu.colgate.cs.modification;
 
 import edu.colgate.cs.config.Settings;
-import org.antlr.v4.runtime.*;
-import org.antlr.v4.runtime.tree.ParseTreeWalker;
+import java.util.Random;
+import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.TokenStreamRewriter;
 import org.batfish.datamodel.*;
-import org.batfish.grammar.cisco.CiscoParserBaseListener;
 import org.batfish.grammar.cisco.CiscoParser.*;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Random;
-public class IpWalkListener extends  CiscoParserBaseListener{
+public class IpWalkListener extends MofyBaseListener {
 
-    TokenStreamRewriter rewriter;
-    int percent;
-    Random generator;
-    Config config;
-    boolean ifchange;
+    private boolean ifchange;
 
-    public IpWalkListener(Boolean ifchange, Random generator, int percent, Config config,
-                           TokenStreamRewriter rewriter) {
-        this.rewriter = rewriter;
-        this.percent = percent;
-        this.config = config;
-        this.generator = generator;
+    public IpWalkListener(boolean ifchange, Random generator, int percent, 
+            Config config, TokenStreamRewriter rewriter) {
+        super(generator, percent, config, rewriter);
         this.ifchange = ifchange;
     }
 
-
-    private void mutateIp(Token ipToken){
+    private void mutateIp(Token ipToken, ParserRuleContext ctx){
       String ip = ipToken.getText();
       String replacement = mutate(ip);
       if (replacement != null){
         rewriter.replace(ipToken.getTokenIndex(),
             replacement);
-        System.out.println("Ip change (ip) at configuration "+config.getHostname()+" line: "+ipToken.getLine());
+        logChange(Settings.modtype.Ip, "Address", ctx);
       }
     }
 
-    private void mutatePrefix(Token prefixToken){
+    private void mutatePrefix(Token prefixToken, ParserRuleContext ctx){
       ConcreteInterfaceAddress prefix = ConcreteInterfaceAddress.parse(prefixToken.getText());
       String ip = prefix.getIp().toString();
       String replacement = mutate(ip);
       if (replacement != null){
         rewriter.replace(prefixToken.getTokenIndex(),
             Prefix.create(Ip.parse(replacement), prefix.getNetworkBits()).toString());
-        System.out.println("Ip change (prefix) at configuration "+config.getHostname()+" line: "+prefixToken.getLine());
+        logChange(Settings.modtype.Ip, "Prefix", ctx);
       }
     }
 
@@ -69,9 +59,9 @@ public class IpWalkListener extends  CiscoParserBaseListener{
     @Override
     public void exitAccess_list_ip_range(Access_list_ip_rangeContext ctx) {
       if (ctx.ip != null) {
-          mutateIp(ctx.ip);
+          mutateIp(ctx.ip, ctx);
       } else if (ctx.prefix != null) {
-          mutatePrefix(ctx.prefix);
+          mutatePrefix(ctx.prefix, ctx);
       }
     }
 
@@ -79,9 +69,9 @@ public class IpWalkListener extends  CiscoParserBaseListener{
     public void exitIf_ip_address(If_ip_addressContext ctx) {
       if (this.ifchange){
         if (ctx.ip != null) {
-          mutateIp(ctx.ip);
+          mutateIp(ctx.ip, ctx);
         } else if (ctx.prefix != null) {
-          mutatePrefix(ctx.prefix);
+          mutatePrefix(ctx.prefix, ctx);
         }
       }
     }
@@ -89,19 +79,19 @@ public class IpWalkListener extends  CiscoParserBaseListener{
     @Override
     public void exitRo_network(Ro_networkContext ctx) {
       if (ctx.ip != null) {
-        mutateIp(ctx.ip);
+        mutateIp(ctx.ip, ctx);
       } else if (ctx.prefix != null) {
-        mutatePrefix(ctx.prefix);
+        mutatePrefix(ctx.prefix, ctx);
       }
     }
 
     @Override
     public void exitNetwork_bgp_tail(Network_bgp_tailContext ctx) {
       if (ctx.ip!= null ){
-        mutateIp(ctx.ip);
+        mutateIp(ctx.ip, ctx);
       }
       else if (ctx.prefix != null) {
-        mutatePrefix(ctx.prefix);
+        mutatePrefix(ctx.prefix, ctx);
       }
     }
 
@@ -111,7 +101,7 @@ public class IpWalkListener extends  CiscoParserBaseListener{
       //   mutatePrefix(ctx.prefix);
       // }
       if (ctx.nhip != null){
-        mutateIp(ctx.nhip);
+        mutateIp(ctx.nhip, ctx);
       }
     }
 
