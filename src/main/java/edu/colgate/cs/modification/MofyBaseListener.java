@@ -58,6 +58,10 @@ public class MofyBaseListener extends  CiscoParserBaseListener {
             return getStanzaIdentifier(
                     (Extended_access_list_tailContext)parent);
         }
+        else if (parent instanceof Extended_access_list_null_tailContext) {
+            return getStanzaIdentifier(
+                    (Extended_access_list_null_tailContext)parent);
+        }
         else if (parent instanceof Standard_access_list_tailContext) {
             return getStanzaIdentifier(
                     (Standard_access_list_tailContext)parent);
@@ -66,17 +70,27 @@ public class MofyBaseListener extends  CiscoParserBaseListener {
     }
 
     protected String getStanzaIdentifier(Extended_access_list_tailContext ctx) {
-        Extended_access_list_stanzaContext extendedAcl = 
-                (Extended_access_list_stanzaContext)ctx.getParent();
+        return getStanzaIdentifier(
+                (Extended_access_list_stanzaContext)ctx.getParent());
+    }
+
+    protected String getStanzaIdentifier(
+            Extended_access_list_null_tailContext ctx) {
+        return getStanzaIdentifier(
+                (Extended_access_list_stanzaContext)ctx.getParent());
+    }
+
+    protected String getStanzaIdentifier(
+            Extended_access_list_stanzaContext ctx) {
         String id = "";
-        if (extendedAcl.name != null) {
-            id = extendedAcl.name.getText();
+        if (ctx.name != null) {
+            id = ctx.name.getText();
         } 
-        else if (extendedAcl.num != null) {
-            id = extendedAcl.num.getText();
+        else if (ctx.num != null) {
+            id = ctx.num.getText();
         }
-        else if (extendedAcl.shortname != null) {
-            id = extendedAcl.shortname.getText();
+        else if (ctx.shortname != null) {
+            id = ctx.shortname.getText();
         }
         return "ExtendedAccessList " + id;
     }
